@@ -1,116 +1,115 @@
-<div align="center">
-  <br />
-    <a href="https://youtu.be/-vsh_GxC-vg" target="_blank">
-      <img src="public/readme/readme-hero.webp" alt="Project Banner">
-    </a>
-  <br />
+# CryptoPulse — Analytics Dashboard
 
-  <div>
-<img src="https://img.shields.io/badge/-Next.js-black?style=for-the-badge&logo=Next.js&logoColor=white" />
-<img src="https://img.shields.io/badge/-Typescript-3178C6?style=for-the-badge&logo=Typescript&logoColor=white" />
-<img src="https://img.shields.io/badge/-Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
-<img src="https://img.shields.io/badge/-shadcn%2Fui-000000?style=for-the-badge&logo=shadcnui&logoColor=white" />
-<img src="https://img.shields.io/badge/-CoinGecko-06D6A0?style=for-the-badge&logo=coingecko&logoColor=white" />
-<img src="https://img.shields.io/badge/-CodeRabbit-FF6B6B?style=for-the-badge&logo=coderabbit&logoColor=white" />
+CryptoPulse is a lightweight, high-performance crypto analytics dashboard built with Next.js 16, TypeScript and Tailwind CSS. It combines CoinGecko REST APIs and WebSockets with the TradingView Lightweight Charts library to deliver both historical OHLCV visualizations and low-latency live market data.
 
-  </div>
+This README explains the project goals, architecture, data flow, critical implementation details, local setup, and troubleshooting tips.
 
-  <h3 align="center">CryptoPulse — Analytics Dashboard</h3>
-</div>
+---
 
-## 📋 <a name="table">Table of Contents</a>
+## Overview
 
-1. ✨ [Introduction](#introduction)
-2. ⚙️ [Tech Stack](#tech-stack)
-3. 🔋 [Features](#features)
-4. 🤸 [Quick Start](#quick-start)
-5. 🚀 [More](#more)
+- Purpose: provide an extensible, developer-friendly dashboard for exploring crypto markets — live prices, candlestick charts, recent trades, converters and token details.
+- Primary data sources: CoinGecko REST API (historical & market data) and CoinGecko's WebSocket feed for live prices/trades.
+- Key UX goals: fast initial render using server components, smooth client-side interactivity for charts and live updates, and keeping sensitive API keys on the server.
 
-## <a name="introduction">✨ Introduction</a>
+---
 
-CryptoPulse is a high-performance analytics dashboard built with Next.js 16, TailwindCSS v4, and shadcn/ui, delivering real-time market intelligence via CoinGecko’s API and WebSockets. It features high-frequency price tracking and live orderbook streams for low-latency updates, paired with interactive TradingView candlestick charts to visualize OHLCV data with surgical precision. From a dynamic homepage showcasing global stats and trending assets to robust token pages with multi-fiat converters and advanced search tables, the platform provides a modular, developer-friendly stack optimized for speed and clarity.
+## Architecture and how it works (deep dive)
 
-## <a name="tech-stack">⚙️ Tech Stack</a>
+1) Server / Client split
 
-- **[Next.js](https://nextjs.org)** is a powerful React framework for building full-stack web applications. It simplifies development with features like server-side rendering, static site generation, and API routes, enabling developers to focus on building products and shipping quickly.
+- The app uses Next.js App Router and embraces server components for data fetching and fast SSR. Pages and components that require server-only secrets or heavy data fetching live on the server (examples: `/app/coins/[id]/page.tsx`, `src/components/home/CoinOverview.tsx`).
+- Interactive UI (charts, live updates, trade tables) are implemented as client components (example: `src/components/CandlestickChart.tsx`, `src/components/LiveDataWrapper.tsx`) using React hooks and browser APIs.
 
-- **[TypeScript](https://www.typescriptlang.org/)** is a superset of JavaScript that adds static typing, providing better tooling, code quality, and error detection for developers. It is ideal for building large-scale applications and enhances the development experience.
+1) REST + proxy pattern
 
-- **[Tailwind CSS](https://tailwindcss.com/)** is a utility-first CSS framework that allows developers to rapidly build modern websites by composing styles directly in their HTML markup, which facilitates highly customized designs and ensures the smallest possible production CSS bundles.
+- Server code calls CoinGecko using a small wrapper `fetcher` in `src/lib/coingecko.actions.ts` which attaches the `COINGECKO_API_KEY` and handles errors.
+- To avoid shipping secret keys and to centralize allowed query parameters, the app exposes a secure server proxy endpoint `/api/ohlc` (see `src/app/api/ohlc/route.ts`). Client-side requests for OHLC data call this route — the server then calls CoinGecko and returns JSON.
 
-- **[Shadcn/ui](https://ui.shadcn.com/docs)** is a collection of beautifully-designed, accessible React components that you copy and paste directly into your project (it is not a traditional npm library), giving you full source code ownership and total customization control to build your own design system often utilizing Tailwind CSS.
+1) WebSockets for live data
 
-- **[CodeRabbit](https://jsm.dev/crypto-rabbit)** is an AI-powered code review platform that integrates into Git workflows (like GitHub and GitLab) to automatically analyze pull requests, identifying issues ranging from readability concerns to logic bugs and security flaws, and offering one-click fixes to help teams ship high-quality code faster.
+ - Live trades, tick prices and streaming OHLC updates are handled by `useCoinGeckoWebSocket` in `src/hooks/useCoinGeckoWebSocket.ts` (client-side). That hook opens a WebSocket, parses messages, and exposes `trades`, `ohlcv`, and `price` to components.
+ - `LiveDataWrapper` wires WebSocket data into the UI and passes the live `ohlcv` datapoint to `CandlestickChart` to merge live ticks with historical candles.
 
-- **[CoinGecko API](https://jsm.dev/crypto-gecko)** is a comprehensive and reliable RESTful API that provides real-time and historical cryptocurrency market data, including prices, market capitalization, volume, and exchange information, enabling developers to build crypto tracking, analysis, and portfolio management applications.
+1) Charts and data flow
 
-- **[TradingView](https://www.tradingview.com/lightweight-charts/)** is a high-performance financial visualization library that provides interactive charting capabilities for rendering complex OHLCV data. It enables the integration of responsive candlestick charts and technical indicators, allowing users to perform professional-grade technical analysis with low-latency updates and surgical precision.
+- Historical OHLC data is fetched server-side for initial render and passed into `CandlestickChart` as props. The chart converts OHLC arrays into the shape required by Lightweight Charts and renders them.
+- Period switches (daily/weekly/etc.) trigger a client fetch to `/api/ohlc` so the chart updates without a full page reload. The API route validates and forwards the request to CoinGecko.
+- Live updates merge an incoming OHLC tick with the historical series and call `series.setData(...)` to update the chart in-place for smooth animations.
 
-## <a name="features">🔋 Features</a>
+1) Error handling and resilience
 
-👉 **Home Dashboard**: Displays crucial market health indicators like **Total Market Cap** and **BTC & ETH dominance**, alongside a dynamic list of **Trending Tokens**, all retrieved instantly using the CoinGecko `/global` and `/search/trending` endpoints.
+- Server fetching uses try/catch. If OHLC fails, the server returns the page with an empty array and the chart renders a fallback state (no crash).
+- Client fetches to `/api/ohlc` will surface errors to console and leave the previous chart data intact.
 
-👉 **Token Discovery Page**: A comprehensive, sortable and searchable table featuring key token metrics (Price, 24h change, Market Cap Rank) for mass market analysis, powered by the scalable `/coins/markets` REST API and optimized with pagination for efficient browsing.
+---
 
-👉 **Detailed Token Overview**: Provides an immediate summary of any selected token, including its logo, current price, and market cap rank, utilizing the `/coins/{id}` REST API for core data and the **CGSimplePrice WebSocket** for continuous, live price monitoring.
+## Important files (map)
 
-👉 **Interactive Candlestick Chart**: Integrates **TradingView Lightweight Charts** to visualize market trends and price action with surgical precision, rendering multi-timeframe OHLCV data fetched from CoinGecko’s high-performance market endpoints.
+- `src/lib/coingecko.actions.ts` — server fetch helper, attaches API key.
+- `src/app/api/ohlc/route.ts` — server proxy for OHLC client requests.
+- `src/hooks/useCoinGeckoWebSocket.ts` — client WebSocket hook for live updates.
+- `src/components/CandlestickChart.tsx` — client chart component using Lightweight Charts.
+- `src/components/LiveDataWrapper.tsx` — integrates websocket data, trades table, and chart.
+- `src/app/coins/[id]/page.tsx` — token detail page: server-rendered coin data + OHLC initial fetch.
 
-👉 **Real-Time Trades & Orderbook**: Features a live stream of market activity exactly as it happens on the exchange, using low-latency WebSockets to display a constant flow of buy/sell orders and recent trade executions.
+---
 
-👉 **Smart Currency Converter**: An interactive tool that allows users to instantly compute coin amounts into dozens of supported fiat and crypto currencies, leveraging the `/simple/supported_vs_currencies` and `/simple/price` endpoints for accurate conversions.
+## Local setup
 
-👉 **Exchange & Trading Pairs**: Allows users to analyze trading context by displaying aggregated lists of exchanges and available trading pairs, with all data sourced directly from the dedicated `/exchanges` and `/exchanges/{id}/tickers` REST APIs.
-
-👉 **Global Search Functionality**: A powerful, unified search bar that allows users to quickly locate any crypto asset by name or symbol, linking directly to the respective Token Detail Page via the CoinGecko `/search` and `/coins/{id}` REST endpoints.
-
-And many more, including code architecture and reusability.
-
-## <a name="quick-start">🤸 Quick Start</a>
-
-Follow these steps to set up the project locally on your machine.
-
-**Prerequisites**
-
-Make sure you have the following installed on your machine:
-
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
-
-**Cloning the Repository**
+1. Install dependencies
 
 ```bash
-git clone https://github.com/adrianhajdin/coinpulse.git
-cd coinpulse
+pnpm install
 ```
 
-**Installation**
+1. Environment
 
-Install the project dependencies using npm:
-
-```bash
-npm install
-```
-
-**Set Up Environment Variables**
-
-Create a new file named `.env` in the root of your project and add the following content:
+Create `.env.local` with:
 
 ```env
 COINGECKO_BASE_URL=https://pro-api.coingecko.com/api/v3
-COINGECKO_API_KEY=
+COINGECKO_API_KEY=your_key_here
 
-NEXT_PUBLIC_COINGECKO_WEBSOCKET_URL=
-NEXT_PUBLIC_COINGECKO_API_KEY=
+NEXT_PUBLIC_COINGECKO_WEBSOCKET_URL= (optional for local testing)
+NEXT_PUBLIC_COINGECKO_API_KEY= (optional public key if used)
 ```
 
-Replace the placeholder values with your real credentials. You can get these by signing up at: [**CoinGecko API**](https://jsm.dev/crypto-gecko).
-
-**Running the Project**
+1. Run
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the project.
+Open <http://localhost:3000>
+
+---
+
+## Troubleshooting & common errors
+
+- "API Error: 400: invalid interval parameter": caused by sending unsupported query params (e.g. `interval` or `precision`) to the OHLC endpoint. Fix: only pass `vs_currency` and `days` (the app includes a server proxy that enforces this).
+- "Functions cannot be passed directly to Client Components": occurs when a server component returns a function prop. Fix: pass only serializable props to client components. `setLiveInterval` is provided from a client wrapper (`LiveDataWrapper`) — server-only pages should not pass functions.
+- Next/Image aspect ratio warnings: ensure you provide styles like `style={{ width: 'auto', height: 'auto' }}` when you manipulate one dimension via CSS.
+
+---
+
+## Performance and caching notes
+
+- Server-side caching (what I added): `/api/ohlc` now sets `Cache-Control` headers based on the requested range (short TTL for 1D, longer for historical). This reduces duplicate requests to CoinGecko and lowers rate usage.
+- Client-side cache & loading (what I added): `CandlestickChart` now keeps a per-session in-memory cache keyed by `coinId-days` so repeated period switches during a session will use cached data when valid. It also shows a small spinner and disables period/interval buttons while fetching new OHLC data.
+- Keep WebSockets on the client — they are low-latency and avoid server-side connection churn.
+
+---
+
+## Testing / Validation
+
+- Manual: run `pnpm dev` and inspect the following pages for console/server errors: home, `/coins/bitcoin`, and any coin detail page.
+- Automated: add lightweight unit tests around `src/lib/utils.ts` and an integration test for the `/api/ohlc` route using a mocked `fetcher`.
+
+---
+
+## Contributing / Next improvements
+
+- Add request caching and rate-limit handling for the proxy endpoint.
+- Add UI loading/error states for period switches and websocket reconnection status.
+- Add E2E tests with Playwright to validate live data flows and chart updates.
