@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="container inner py-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         <div className="space-y-4">
           <Link href="/">
-            <Image src="/assets/logo.svg" alt="CoinPulse Logo" width={132} height={40} />
+            <Image src="/assets/logo.svg" alt="CoinPulse Logo" width={132} height={40} style={{ width: 'auto', height: 'auto' }} />
           </Link>
           <p className="text-sm text-purple-100/75 max-w-sm">A lightweight crypto dashboard with live prices, charts and market data — built for traders and curious folks.</p>
         </div>

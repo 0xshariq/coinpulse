@@ -26,7 +26,7 @@ const TrendingCoins = async () => {
 
         return (
           <Link href={`/coins/${item.id}`}>
-            <Image src={item.large} alt={item.name} width={36} height={36} />
+            <Image src={item.large} alt={item.name} width={36} height={36} style={{ width: 'auto', height: 'auto' }} />
             <p>{item.name}</p>
           </Link>
         );
@@ -61,7 +61,7 @@ const TrendingCoins = async () => {
   ];
 
   return (
-    <div id="trending-coins">
+    <div id="trending-coins" className="w-full">
       <h4>Trending Coins</h4>
 
       <DataTable

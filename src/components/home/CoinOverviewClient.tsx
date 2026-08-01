@@ -18,7 +18,7 @@ const CoinOverviewClient: React.FC<Props> = ({ coinsData }) => {
   if (!active) return null;
 
   return (
-    <div id="coin-overview-client">
+    <div id="coin-overview-client" className="w-full lg:col-span-2 xl:col-span-2">
       <div className="tabs flex gap-2 mb-4">
         {ids.map((id) => (
           <button
@@ -34,10 +34,11 @@ const CoinOverviewClient: React.FC<Props> = ({ coinsData }) => {
         <div className="header pt-2 flex items-center gap-3">
           <Image src={active.coin.image.large} alt={active.coin.name} width={56} height={56} style={{ width: 'auto', height: 'auto' }} />
           <div className="info">
-            <p>
-              {active.coin.name} / {active.coin.symbol.toUpperCase()}
-            </p>
-            <h1>{formatCurrency(active.coin.market_data.current_price.usd)}</h1>
+              <p className="whitespace-nowrap">
+                <span className="font-semibold text-sm md:text-base">{active.coin.name}</span>
+                <span className="ml-2 text-xs md:text-sm text-purple-100/70">/ {active.coin.symbol.toUpperCase()}</span>
+              </p>
+              <h1 className="text-xl md:text-2xl">{formatCurrency(active.coin.market_data.current_price.usd)}</h1>
           </div>
         </div>
       </CandlestickChart>

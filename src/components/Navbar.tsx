@@ -13,7 +13,7 @@ const Navbar = () => {
     <header>
       <div className='container inner'>
         <Link href='/'>
-          <Image src='/assets/logo.svg' alt='CoinPulse Logo' width={132} height={40} />
+          <Image src='/assets/logo.svg' alt='CoinPulse Logo' width={132} height={40} style={{ width: 'auto', height: 'auto' }} />
         </Link>
 
         <nav>

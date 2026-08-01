@@ -21,21 +21,49 @@ export async function fetcher<T>(
     { skipEmptyString: true, skipNull: true },
   );
 
-  const response = await fetch(url, {
-    headers: {
-      'x-cg-pro-api-key': API_KEY,
-      'Content-Type': 'application/json',
-    } as Record<string, string>,
-    next: { revalidate },
-  });
+  const maxAttempts = 3;
+  let attempt = 0;
 
-  if (!response.ok) {
+  while (attempt < maxAttempts) {
+    attempt += 1;
+
+    const response = await fetch(url, {
+      headers: {
+        'x-cg-api-key': API_KEY,
+        'Content-Type': 'application/json',
+      } as Record<string, string>,
+      next: { revalidate },
+    });
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    // If rate limited or server error, attempt a retry with backoff
+    const status = response.status;
     const errorBody: CoinGeckoErrorBody = await response.json().catch(() => ({}));
 
-    throw new Error(`API Error: ${response.status}: ${errorBody.error || response.statusText} `);
+    // If this was the last attempt, throw the error
+    if (attempt >= maxAttempts || (status < 500 && status !== 429)) {
+      throw new Error(`API Error: ${status}: ${errorBody.error || response.statusText} `);
+    }
+
+    // Determine wait time from Retry-After header if provided
+    const retryAfter = response.headers.get('Retry-After');
+    let waitMs = 1000 * Math.pow(2, attempt - 1); // exponential backoff: 1s,2s,4s
+    if (retryAfter) {
+      const ra = Number(retryAfter);
+      if (!Number.isNaN(ra)) {
+        waitMs = ra * 1000;
+      }
+    }
+
+    // wait before retry
+    await new Promise((res) => setTimeout(res, waitMs));
   }
 
-  return response.json();
+  // Should not reach here
+  throw new Error('Unexpected fetch error');
 }
 
 export async function getPools(
