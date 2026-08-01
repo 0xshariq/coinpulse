@@ -11,7 +11,7 @@ import Categories from '@/components/home/Categories';
 const Page = async () => {
   return (
     <main className="main-container">
-      <section className="home-grid">
+      <section className="home-grid flex flex-col gap-4">
         <Suspense fallback={<CoinOverviewFallback />}>
           <CoinOverview />
         </Suspense>
