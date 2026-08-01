@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React from 'react'
 
 const Navbar = () => {
 
@@ -12,7 +11,7 @@ const Navbar = () => {
 
   return (
     <header>
-      <div className='main-container inner'>
+      <div className='container inner'>
         <Link href='/'>
           <Image src='/assets/logo.svg' alt='CoinPulse Logo' width={132} height={40} />
         </Link>
