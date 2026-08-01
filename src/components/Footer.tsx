@@ -9,7 +9,7 @@ const Footer = () => {
           <Link href="/">
             <Image src="/assets/logo.svg" alt="CoinPulse Logo" width={132} height={40} style={{ width: 'auto', height: 'auto' }} />
           </Link>
-          <p className="text-sm text-purple-100/75 max-w-sm">A lightweight crypto dashboard with live prices, charts and market data — built for traders and curious folks.</p>
+          <p className="mt-3 text-sm text-purple-100/75 max-w-sm">A lightweight crypto dashboard with live prices, charts and market data — built for traders and curious folks.</p>
         </div>
 
         <div>

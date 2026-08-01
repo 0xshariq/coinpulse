@@ -265,6 +265,7 @@ interface DataTableColumn<T> {
   cell: (row: T, index: number) => React.ReactNode;
   headClassName?: string;
   cellClassName?: string;
+  id?: string | number;
 }
 
 interface DataTableProps<T> {
