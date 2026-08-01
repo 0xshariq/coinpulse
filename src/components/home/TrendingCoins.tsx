@@ -7,7 +7,7 @@ import DataTable from '@/components/DataTable';
 import { TrendingCoinsFallback } from './fallback';
 
 const TrendingCoins = async () => {
-  let trendingCoins;
+  let trendingCoins: { coins: TrendingCoin[] } | null = null;
 
   try {
     trendingCoins = await fetcher<{ coins: TrendingCoin[] }>('/search/trending', undefined, 300);
@@ -16,6 +16,7 @@ const TrendingCoins = async () => {
     return <TrendingCoinsFallback />;
   }
 
+  if (!trendingCoins) return <TrendingCoinsFallback />;
   const columns: DataTableColumn<TrendingCoin>[] = [
     {
       header: 'Name',
