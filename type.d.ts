@@ -266,10 +266,11 @@ interface DataTableColumn<T> {
   headClassName?: string;
   cellClassName?: string;
   id?: string | number;
+  key?: string | number;
 }
 
 interface DataTableProps<T> {
-  columns: DataTableColumn<T>[];
+  columns: (DataTableColumn<T> & ({ id: string | number } | { key: string | number }))[];
   data: T[];
   rowKey: (row: T, index: number) => React.Key;
   tableClassName?: string;

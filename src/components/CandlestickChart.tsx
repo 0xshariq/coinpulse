@@ -52,20 +52,23 @@ const CandlestickChart = ({
   };
 
   const fetchOHLCData = async (selectedPeriod: Period) => {
-    const { days } = PERIOD_CONFIG[selectedPeriod];
+    const { days, interval } = PERIOD_CONFIG[selectedPeriod];
     setIsLoadingPeriod(true);
     try {
-      const cacheKey = `${coinId}-${days}`;
+      const intervalKey = interval ?? 'auto';
+      const cacheKey = `${coinId}-${days}-${intervalKey}`;
       const cached = cacheRef.current.get(cacheKey);
       const now = Date.now();
       if (cached && cached.expires > now) {
-        startTransition(() => setOhlcData(cached.data ?? []));
-        return;
+        return cached.data ?? [];
       }
 
-      const res = await fetch(`/api/ohlc?coinId=${encodeURIComponent(coinId)}&days=${encodeURIComponent(
-        String(days),
-      )}`);
+      const params = new URLSearchParams({ coinId, days: String(days) });
+      if (interval) {
+        params.set('interval', interval);
+      }
+
+      const res = await fetch(`/api/ohlc?${params.toString()}`);
 
       if (!res.ok) {
         throw new Error(`Failed to fetch OHLC from proxy: ${res.status}`);
@@ -83,21 +86,35 @@ const CandlestickChart = ({
         // ignore sessionStorage errors
       }
 
-      startTransition(() => {
-        setOhlcData(newData ?? []);
-      });
+      return newData ?? [];
     } catch (e) {
       console.error('Failed to fetch OHLCData from proxy', e);
+      return null;
     } finally {
       setIsLoadingPeriod(false);
     }
   };
 
-  const handlePeriodChange = (newPeriod: Period) => {
+  const handlePeriodChange = async (newPeriod: Period) => {
     if (newPeriod === period) return;
 
-    setPeriod(newPeriod);
-    fetchOHLCData(newPeriod);
+    const previousPeriod = period;
+    const previousData = ohlcData;
+
+    const fetchedData = await fetchOHLCData(newPeriod);
+
+    if (fetchedData) {
+      startTransition(() => {
+        setPeriod(newPeriod);
+        setOhlcData(fetchedData);
+      });
+      return;
+    }
+
+    startTransition(() => {
+      setPeriod(previousPeriod);
+      setOhlcData(previousData);
+    });
   };
 
   useEffect(() => {
@@ -154,17 +171,22 @@ const CandlestickChart = ({
       // ignore
     }
 
-    // seed cache with initial server data if present
     try {
+      const { days, interval } = PERIOD_CONFIG[period];
+      const cacheKey = `${coinId}-${days}-${interval ?? 'auto'}`;
+      const cached = cacheRef.current.get(cacheKey);
+
       if (data && data.length) {
-        const days = PERIOD_CONFIG[period].days;
-        const cacheKey = `${coinId}-${days}`;
         const ttl = getTtlForDays(days) * 1000;
         cacheRef.current.set(cacheKey, { data: data ?? [], expires: Date.now() + ttl });
         const serial = Array.from(cacheRef.current.entries());
         try {
           sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(serial));
-        } catch { }
+        } catch {
+          // ignore sessionStorage errors
+        }
+      } else if (cached && cached.expires > Date.now()) {
+        startTransition(() => setOhlcData(cached.data ?? []));
       }
     } catch (e) {
       // ignore

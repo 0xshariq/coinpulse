@@ -18,7 +18,7 @@ function Separator({
       className={(state: any) =>
         cn(
           base,
-          state?.orientation === 'horizontal'
+          state.orientation === 'horizontal'
             ? 'h-px w-full'
             : 'w-px self-stretch',
           typeof className === 'function' ? className(state) : className,
