@@ -17,14 +17,21 @@ const Navbar = () => {
         </Link>
 
         <nav>
-          <Link href='/' className={cn('nav-link', {
+          <Link href='/' aria-current={pathname === '/' ? 'page' : undefined} className={cn('nav-link', {
             'is-active': pathname === '/',
             'is-home': true
-          })}>Home</Link>
+          })}>
+            Home
+          </Link>
+
           <p>Search Modal</p>
-          <Link href='/coins' className={cn('nav-link', {
+
+
+          <Link href='/coins' aria-current={pathname === '/coins' ? 'page' : undefined} className={cn('nav-link', {
             'is-active': pathname === '/coins'
-          })}>All Coins</Link>
+          })}>
+            All Coins
+          </Link>
         </nav>
       </div>
     </header>
