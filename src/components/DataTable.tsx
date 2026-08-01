@@ -23,18 +23,21 @@ const DataTable = <T,>({
     <Table wrapperClassName={cn('custom-scrollbar')} className={cn(tableClassName)}>
       <TableHeader className={headerClassName}>
         <TableRow className={cn('hover:bg-transparent!', headerRowClassName)}>
-          {columns.map((column, columnIndex) => (
-            <TableHead
-              key={(column as any).id ?? columnIndex}
-              className={cn(
-                'bg-dark-400 text-purple-100 py-4 first:pl-5 last:pr-5',
-                headerCellClassName,
-                column.headClassName,
-              )}
-            >
-              {column.header}
-            </TableHead>
-          ))}
+          {columns.map((column) => {
+            const colId = (column as any).id ?? (column as any).key;
+            return (
+              <TableHead
+                key={colId}
+                className={cn(
+                  'bg-dark-400 text-purple-100 py-4 first:pl-5 last:pr-5',
+                  headerCellClassName,
+                  column.headClassName,
+                )}
+              >
+                {column.header}
+              </TableHead>
+            );
+          })}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -46,14 +49,17 @@ const DataTable = <T,>({
               bodyRowClassName,
             )}
           >
-            {columns.map((column, columnIndex) => (
-              <TableCell
-                key={(column as any).id ?? columnIndex}
-                className={cn('py-4 first:pl-5 last:pr-5', bodyCellClassName, column.cellClassName)}
-              >
-                {column.cell(row, rowIndex)}
-              </TableCell>
-            ))}
+            {columns.map((column) => {
+              const colId = (column as any).id ?? (column as any).key;
+              return (
+                <TableCell
+                  key={colId}
+                  className={cn('py-4 first:pl-5 last:pr-5', bodyCellClassName, column.cellClassName)}
+                >
+                  {column.cell(row, rowIndex)}
+                </TableCell>
+              );
+            })}
           </TableRow>
         ))}
       </TableBody>
