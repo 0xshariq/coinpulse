@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -344,6 +344,14 @@
             @apply text-sm md:text-base;
           }
         }
+      }
+
+      .description-cell {
+        @apply text-sm text-gray-400 leading-6;
+
+        max-width: 500px;
+        white-space: normal;
+        word-break: break-word;
       }
 
       .change-cell {

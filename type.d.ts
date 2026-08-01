@@ -79,6 +79,9 @@ interface TrendingCoin {
       price_change_percentage_24h: {
         usd: number;
       };
+      content: {
+        description: string;
+      };
     };
   };
 }

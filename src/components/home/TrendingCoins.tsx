@@ -17,34 +17,52 @@ const TrendingCoins = async () => {
   }
 
   if (!trendingCoins) return <TrendingCoinsFallback />;
+
+
   const columns: (DataTableColumn<TrendingCoin> & ({ id: string | number } | { key: string | number }))[] = [
     {
       id: 'name',
       header: 'Name',
       cellClassName: 'name-cell',
       cell: (coin) => {
-        const item = coin.item;
+        const coinData = coin.item;
 
         return (
-          <Link href={`/coins/${item.id}`}>
-            <Image src={item.large} alt={item.name} width={36} height={36} style={{ width: 'auto', height: 'auto' }} />
-            <p>{item.name}</p>
+          <Link href={`/coins/${coinData.id}`}>
+            <Image src={coinData.large} alt={coinData.name} width={36} height={36} style={{ width: 'auto', height: 'auto' }} />
+            <p className="whitespace-nowrap">
+              <span className="font-semibold text-sm md:text-base">{coinData.name}</span>
+              <span className="ml-2 text-xs md:text-sm text-purple-100/70">/ {coinData.symbol.toUpperCase()}</span>
+            </p>
           </Link>
         );
       },
+    },
+    {
+      id: 'description',
+      header: 'Description',
+      cellClassName: 'description-cell',
+      cell: (coin) => {
+        const coinData = coin.item;
+        return (
+          <p className="line-clamp-3 text-sm text-slate-400 leading-6">
+            {coinData.data.content?.description || 'No description available.'}
+          </p>
+        );
+      }
     },
     {
       id: 'change-24h',
       header: '24h Change',
       cellClassName: 'change-cell',
       cell: (coin) => {
-        const item = coin.item;
-        const isTrendingUp = item.data.price_change_percentage_24h.usd > 0;
+        const coinData = coin.item;
+        const isTrendingUp = coinData.data.price_change_percentage_24h.usd > 0;
 
         return (
           <div className={cn('price-change', isTrendingUp ? 'text-green-500' : 'text-red-500')}>
             <p className="flex items-center">
-              {formatPercentage(item.data.price_change_percentage_24h.usd)}
+              {formatPercentage(coinData.data.price_change_percentage_24h.usd)}
               {isTrendingUp ? (
                 <TrendingUp width={16} height={16} className='ml-1' />
               ) : (
@@ -54,6 +72,12 @@ const TrendingCoins = async () => {
           </div>
         );
       },
+    },
+    {
+      id: 'market-cap-rank',
+      header: 'Market Cap Rank',
+      cellClassName: 'market-cap-cell',
+      cell: (coin) => formatCurrency(coin.item.market_cap_rank),
     },
     {
       id: 'price',

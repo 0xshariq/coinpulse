@@ -42,9 +42,9 @@ const Categories = async () => {
               <p className="flex items-center">
                 {formatPercentage(change)}
                 {isTrendingUp ? (
-                  <TrendingUp width={16} height={16} />
+                  <TrendingUp width={16} height={16} className='ml-1' />
                 ) : isNeutral ? null : (
-                  <TrendingDown width={16} height={16} />
+                  <TrendingDown width={16} height={16} className='ml-1' />
                 )}
               </p>
             </div>
