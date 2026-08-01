@@ -68,7 +68,7 @@ export const CategoriesFallback = () => {
       cell: () => <div className="category-line skeleton" />,
     },
     {
-      header: 'Top Gainers',
+      header: 'Top Coins',
       cellClassName: 'top-gainers-cell',
       cell: () => (
         <div className="flex gap-1">

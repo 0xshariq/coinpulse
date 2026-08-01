@@ -1,11 +1,11 @@
 import { fetcher } from "@/lib/coingecko.actions";
-import { DataTable } from "@/components/DataTable";
+import DataTable from "@/components/DataTable";
 import Image from "next/image";
 import Link from "next/link";
 
-import { cn, formatPercentage, formatPrice } from "@/lib/utils";
+import { cn, formatPercentage, formatCurrency } from "@/lib/utils";
 
-const Coins = async ({ searchParams }: NextPageProps) => {
+const Coins = async () => {
 
   const coinsData = await fetcher<CoinMarketData[]>("/coins/markets", {
     vs_currency: "usd",
@@ -14,8 +14,9 @@ const Coins = async ({ searchParams }: NextPageProps) => {
     price_change_percentage: "24h",
   });
 
-  const columns: DataTableColumn<CoinMarketData>[] = [
+  const columns: (DataTableColumn<CoinMarketData> & ({ id: string | number } | { key: string | number }))[] = [
     {
+      id: "rank",
       header: "Rank",
       cellClassName: "rank-cell",
       cell: (coin) => (
@@ -26,6 +27,7 @@ const Coins = async ({ searchParams }: NextPageProps) => {
       ),
     },
     {
+      id: "token",
       header: "Token",
       cellClassName: "token-cell",
       cell: (coin) => (
@@ -38,11 +40,13 @@ const Coins = async ({ searchParams }: NextPageProps) => {
       ),
     },
     {
+      id: "price",
       header: "Price",
       cellClassName: "price-cell",
-      cell: (coin) => formatPrice(coin.current_price),
+      cell: (coin) => formatCurrency(coin.current_price, coin.current_price < 0.01 ? 6 : 2),
     },
     {
+      id: "change-24h",
       header: "24h Change",
       cellClassName: "change-cell",
       cell: (coin) => {
@@ -62,9 +66,10 @@ const Coins = async ({ searchParams }: NextPageProps) => {
       },
     },
     {
+      id: "market-cap",
       header: "Market Cap",
       cellClassName: "market-cap-cell",
-      cell: (coin) => formatPrice(coin.market_cap),
+      cell: (coin) => formatCurrency(coin.market_cap),
     },
   ];
 
