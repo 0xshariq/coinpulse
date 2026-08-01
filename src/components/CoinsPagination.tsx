@@ -21,14 +21,25 @@ const CoinsPagination = ({ currentPage, totalPages, hasMorePages }: Pagination) 
 
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
   const isLastPage = !hasMorePages || currentPage === totalPages;
+  const canGoPrev = currentPage > 1;
+  const canGoNext = !isLastPage;
 
   return (
     <Pagination id="coins-pagination">
       <PaginationContent className="pagination-content">
         <PaginationItem className="pagination-control prev">
           <PaginationPrevious
-            onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-            className={currentPage === 1 ? 'control-disabled' : 'control-button'}
+            href={canGoPrev ? `/coins?page=${currentPage - 1}` : undefined}
+            aria-disabled={!canGoPrev}
+            tabIndex={canGoPrev ? undefined : -1}
+            onClick={(event) => {
+              if (!canGoPrev) {
+                event.preventDefault();
+                return;
+              }
+              handlePageChange(currentPage - 1);
+            }}
+            className={canGoPrev ? 'control-button' : 'control-disabled'}
           />
         </PaginationItem>
 
@@ -39,6 +50,7 @@ const CoinsPagination = ({ currentPage, totalPages, hasMorePages }: Pagination) 
                 <span className="ellipsis">...</span>
               ) : (
                 <PaginationLink
+                  href={`/coins?page=${page}`}
                   onClick={() => handlePageChange(page)}
                   className={cn('page-link', {
                     'page-link-active': currentPage === page,
@@ -53,8 +65,17 @@ const CoinsPagination = ({ currentPage, totalPages, hasMorePages }: Pagination) 
 
         <PaginationItem className="pagination-control next">
           <PaginationNext
-            onClick={() => !isLastPage && handlePageChange(currentPage + 1)}
-            className={isLastPage ? 'control-disabled' : 'control-button'}
+            href={canGoNext ? `/coins?page=${currentPage + 1}` : undefined}
+            aria-disabled={!canGoNext}
+            tabIndex={canGoNext ? undefined : -1}
+            onClick={(event) => {
+              if (!canGoNext) {
+                event.preventDefault();
+                return;
+              }
+              handlePageChange(currentPage + 1);
+            }}
+            className={canGoNext ? 'control-button' : 'control-disabled'}
           />
         </PaginationItem>
       </PaginationContent>

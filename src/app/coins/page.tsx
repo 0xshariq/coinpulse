@@ -43,7 +43,7 @@ const Coins = async () => {
       id: "price",
       header: "Price",
       cellClassName: "price-cell",
-      cell: (coin) => formatCurrency(coin.current_price),
+      cell: (coin) => formatCurrency(coin.current_price, coin.current_price < 0.01 ? 6 : 2),
     },
     {
       id: "change-24h",

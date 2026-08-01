@@ -9,15 +9,23 @@ const Categories = async () => {
   try {
     const categories = await fetcher<Category[]>('/coins/categories');
 
+    const normalizedCategories = categories?.filter(
+      (category): category is Category => Boolean(category) && Array.isArray(category.top_3_coins),
+    );
+
+    if (!Array.isArray(categories) || categories.some((category) => !category || !Array.isArray(category.top_3_coins))) {
+      throw new Error('Malformed category data');
+    }
+
     const columns: (DataTableColumn<Category> & ({ id: string | number } | { key: string | number }))[] = [
       { id: 'category', header: 'Category', cellClassName: 'category-cell', cell: (category) => category.name },
       {
         id: 'top-gainers',
-        header: 'Top Gainers',
+        header: 'Top Coins',
         cellClassName: 'top-gainers-cell',
         cell: (category) =>
             category.top_3_coins.map((coin) => (
-            <Image src={coin} alt={coin} key={coin} width={28} height={28} style={{ width: 'auto', height: 'auto' }} />
+            <Image src={coin} alt="" key={coin} width={28} height={28} style={{ width: 'auto', height: 'auto' }} />
           )),
       },
       {
@@ -25,15 +33,17 @@ const Categories = async () => {
         header: '24h Change',
         cellClassName: 'change-header-cell',
         cell: (category) => {
-          const isTrendingUp = category.market_cap_change_24h > 0;
+          const change = category.market_cap_change_24h;
+          const isTrendingUp = change > 0;
+          const isNeutral = change === 0;
 
           return (
-            <div className={cn('change-cell', isTrendingUp ? 'text-green-500' : 'text-red-500')}>
+            <div className={cn('change-cell', isTrendingUp ? 'text-green-500' : isNeutral ? 'text-gray-400' : 'text-red-500')}>
               <p className="flex items-center">
-                {formatPercentage(category.market_cap_change_24h)}
+                {formatPercentage(change)}
                 {isTrendingUp ? (
                   <TrendingUp width={16} height={16} />
-                ) : (
+                ) : isNeutral ? null : (
                   <TrendingDown width={16} height={16} />
                 )}
               </p>
