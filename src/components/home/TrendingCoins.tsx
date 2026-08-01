@@ -17,8 +17,9 @@ const TrendingCoins = async () => {
   }
 
   if (!trendingCoins) return <TrendingCoinsFallback />;
-  const columns: DataTableColumn<TrendingCoin>[] = [
+  const columns: (DataTableColumn<TrendingCoin> & ({ id: string | number } | { key: string | number }))[] = [
     {
+      id: 'name',
       header: 'Name',
       cellClassName: 'name-cell',
       cell: (coin) => {
@@ -33,6 +34,7 @@ const TrendingCoins = async () => {
       },
     },
     {
+      id: 'change-24h',
       header: '24h Change',
       cellClassName: 'change-cell',
       cell: (coin) => {
@@ -44,9 +46,9 @@ const TrendingCoins = async () => {
             <p className="flex items-center">
               {formatPercentage(item.data.price_change_percentage_24h.usd)}
               {isTrendingUp ? (
-                <TrendingUp width={16} height={16} />
+                <TrendingUp width={16} height={16} className='ml-1' />
               ) : (
-                <TrendingDown width={16} height={16} />
+                <TrendingDown width={16} height={16} className='ml-1' />
               )}
             </p>
           </div>
@@ -54,6 +56,7 @@ const TrendingCoins = async () => {
       },
     },
     {
+      id: 'price',
       header: 'Price',
       cellClassName: 'price-cell',
       cell: (coin) => formatCurrency(coin.item.data.price),
