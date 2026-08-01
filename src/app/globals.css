@@ -796,7 +796,7 @@
     }
 
     .info {
-      @apply flex gap-3 items-center;
+      @apply flex flex-col gap-6;
 
       img {
         @apply size-11.25 sm:size-12.5 xl:size-19.25;
@@ -809,6 +809,10 @@
       h1 {
         @apply text-3xl sm:text-5xl xl:text-6xl font-semibold;
       }
+    }
+
+    .header-row {
+      @apply flex items-center gap-3;
     }
 
     .stats {

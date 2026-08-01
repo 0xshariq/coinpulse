@@ -235,6 +235,7 @@ interface LiveDataProps {
 
 interface LiveCoinHeaderProps {
   name: string;
+  description: string;
   image: string;
   livePrice?: number;
   livePriceChangePercentage24h: number;
