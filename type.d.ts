@@ -150,6 +150,7 @@ interface ExtendedPriceData {
   coin?: string;
   price?: number;
   change24h?: number;
+  priceChange24h?: number;
   marketCap?: number;
   volume24h?: number;
   timestamp?: number;
@@ -227,7 +228,7 @@ interface CoinDetailsData {
 
 interface LiveDataProps {
   coinId: string;
-  poolId: string;
+  binanceSymbol: string;
   coin: CoinDetailsData;
   coinOHLCData?: OHLCData[];
   children?: React.ReactNode;
@@ -251,17 +252,85 @@ interface Category {
   volume_24h: number;
 }
 
-interface UseCoinGeckoWebSocketProps {
-  coinId: string;
-  poolId: string;
+interface UseBinanceWebSocketProps {
+  symbol: string;
   liveInterval?: '1s' | '1m';
 }
 
-interface UseCoinGeckoWebSocketReturn {
+interface UseBinanceWebSocketReturn {
   price: ExtendedPriceData | null;
   trades: Trade[];
   ohlcv: OHLCData | null;
+  bookTicker: BinanceBookTicker | null;
   isConnected: boolean;
+  isAvailable: boolean | null;
+}
+
+interface BinanceTickerMessage {
+  e: '24hrTicker';
+  E: number;
+  s: string;
+  c: string;
+  p: string;
+  P: string;
+  q: string;
+}
+
+interface BinanceAggregateTradeMessage {
+  e: 'aggTrade';
+  E: number;
+  s: string;
+  p: string;
+  q: string;
+  T: number;
+  m: boolean;
+}
+
+interface BinanceKlineMessage {
+  e: 'kline';
+  k: {
+    t: number;
+    o: string;
+    h: string;
+    l: string;
+    c: string;
+  };
+}
+
+interface BinanceBookTickerMessage {
+  s: string;
+  b: string;
+  B: string;
+  a: string;
+  A: string;
+}
+
+interface BinanceBookTicker {
+  bidPrice: number;
+  bidQuantity: number;
+  askPrice: number;
+  askQuantity: number;
+}
+
+type BinanceStreamData = BinanceTickerMessage | BinanceAggregateTradeMessage | BinanceKlineMessage | BinanceBookTickerMessage;
+
+interface BinanceCombinedStreamMessage {
+  stream: string;
+  data: BinanceStreamData;
+}
+
+interface BinanceTickerData {
+  symbol: string;
+  lastPrice: string;
+  highPrice: string;
+  lowPrice: string;
+  quoteVolume: string;
+  count: number;
+}
+
+interface BinanceLiveTicker {
+  price: number;
+  change24h: number;
 }
 
 interface DataTableColumn<T> {
@@ -315,10 +384,3 @@ interface CoinGeckoErrorBody {
 }
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
-
-interface PoolData {
-  id: string;
-  address: string;
-  name: string;
-  network: string;
-}

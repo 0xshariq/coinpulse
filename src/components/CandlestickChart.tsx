@@ -196,29 +196,17 @@ const CandlestickChart = ({
   useEffect(() => {
     if (!candleSeriesRef.current) return;
 
-    const convertedToSeconds = ohlcData.map(
-      (item) => [Math.floor(item[0] / 1000), item[1], item[2], item[3], item[4]] as OHLCData,
+    // Normalize first, then upsert by second. A current Binance candle must win over
+    // a CoinGecko candle for the same second instead of being filtered as a duplicate.
+    const candlesBySecond = new Map<number, OHLCData>();
+    [...ohlcData, ...(liveOhlcv ? [liveOhlcv] : [])].forEach((item) => {
+      const time = Math.floor(item[0] / 1000);
+      candlesBySecond.set(time, [time, item[1], item[2], item[3], item[4]]);
+    });
+
+    const converted = convertOHLCData(
+      Array.from(candlesBySecond.values()).sort((first, second) => first[0] - second[0]),
     );
-
-    let merged: OHLCData[];
-
-    if (liveOhlcv) {
-      const liveTimestamp = liveOhlcv[0];
-
-      const lastHistoricalCandle = convertedToSeconds[convertedToSeconds.length - 1];
-
-      if (lastHistoricalCandle && lastHistoricalCandle[0] === liveTimestamp) {
-        merged = [...convertedToSeconds.slice(0, -1), liveOhlcv];
-      } else {
-        merged = [...convertedToSeconds, liveOhlcv];
-      }
-    } else {
-      merged = convertedToSeconds;
-    }
-
-    merged.sort((a, b) => a[0] - b[0]);
-
-    const converted = convertOHLCData(merged);
     candleSeriesRef.current.setData(converted);
 
     const dataChanged = prevOhlcDataLength.current !== ohlcData.length;

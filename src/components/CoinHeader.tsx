@@ -3,6 +3,11 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 
+const summarizeDescription = (description: string, maximumSentences = 4) => {
+  const sentences = description.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [];
+  return sentences.slice(0, maximumSentences).join(' ').trim();
+};
+
 const CoinHeader = ({
   livePriceChangePercentage24h,
   priceChangePercentage30d,
@@ -15,6 +20,7 @@ const CoinHeader = ({
   const isTrendingUp = livePriceChangePercentage24h > 0;
   const isThirtyDayUp = priceChangePercentage30d > 0;
   const isPriceChangeUp = priceChange24h > 0;
+  const displayedDescription = description ? summarizeDescription(description) : '';
 
   const stats = [
     {
@@ -58,7 +64,7 @@ const CoinHeader = ({
           </div>
         </div>
         <p className="w-full mt-2 text-purple-100 leading-8 max-w-4xl">
-          {description ? description : 'No description available for this coin.'}
+          {displayedDescription || 'No description available for this coin.'}
         </p>
       </div>
 

@@ -1,4 +1,5 @@
-import { fetcher, getPools } from '@/lib/coingecko.actions';
+import { fetcher } from '@/lib/coingecko.actions';
+import { getBinanceTicker } from '@/lib/binance.actions';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -14,24 +15,16 @@ const Page = async ({ params }: NextPageProps) => {
 
   // The OHLC endpoint does not accept `interval` or `precision` query params.
   // Request only supported params and fail gracefully if OHLC fetch fails.
-  let coinOHLCData: OHLCData[] = [];
-  try {
-    coinOHLCData = await fetcher<OHLCData[]>(`/coins/${id}/ohlc`, {
+  const [coinOHLCData, binanceTicker] = await Promise.all([
+    fetcher<OHLCData[]>(`/coins/${id}/ohlc`, {
       vs_currency: 'usd',
       days: 1,
-    });
-  } catch (err) {
-    console.warn('Failed to fetch coin OHLC data for', id, err);
-    coinOHLCData = [];
-  }
-
-  const platform = coinData.asset_platform_id
-    ? coinData.detail_platforms?.[coinData.asset_platform_id]
-    : null;
-  const network = platform?.geckoterminal_url.split('/')[3] || null;
-  const contractAddress = platform?.contract_address || null;
-
-  const pool = await getPools(id, network, contractAddress);
+    }).catch((err) => {
+      console.warn('Failed to fetch coin OHLC data for', id, err);
+      return [] as OHLCData[];
+    }),
+    getBinanceTicker(coinData.symbol),
+  ]);
 
   const coinDetails = [
     {
@@ -46,6 +39,30 @@ const Page = async ({ params }: NextPageProps) => {
       label: 'Total Volume',
       value: formatCurrency(coinData.market_data.total_volume.usd),
     },
+    ...(binanceTicker
+      ? [
+          {
+            label: 'Binance Pair',
+            value: binanceTicker.symbol,
+          },
+          {
+            label: 'Binance 24h High',
+            value: formatCurrency(Number(binanceTicker.highPrice)),
+          },
+          {
+            label: 'Binance 24h Low',
+            value: formatCurrency(Number(binanceTicker.lowPrice)),
+          },
+          {
+            label: 'Binance 24h Volume',
+            value: formatCurrency(Number(binanceTicker.quoteVolume)),
+          },
+          {
+            label: 'Binance Trades (24h)',
+            value: binanceTicker.count.toLocaleString('en-US'),
+          },
+        ]
+      : []),
     {
       label: 'Website',
       value: '-',
@@ -69,7 +86,7 @@ const Page = async ({ params }: NextPageProps) => {
   return (
     <main id="coin-details-page">
       <section className="primary">
-        <LiveDataWrapper coinId={id} poolId={pool.id} coin={coinData} coinOHLCData={coinOHLCData}>
+        <LiveDataWrapper coinId={id} binanceSymbol={coinData.symbol} coin={coinData} coinOHLCData={coinOHLCData}>
           <h4>Exchange Listings</h4>
         </LiveDataWrapper>
       </section>
