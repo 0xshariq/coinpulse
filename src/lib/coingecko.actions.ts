@@ -65,3 +65,8 @@ export async function fetcher<T>(
   // Should not reach here
   throw new Error('Unexpected fetch error');
 }
+
+export async function searchCoins(query: string): Promise<SearchCoin[]> {
+  const data = await fetcher<SearchCoin[]>('search', { query });
+  return data;
+}
