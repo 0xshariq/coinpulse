@@ -16,7 +16,10 @@ export const useBinanceTickers = (symbols: string[]) => {
 
   const symbolsKey = symbols.join('|');
   const pairs = useMemo(
-    () => Array.from(new Set(symbols.map(getBinanceUsdtPair).filter((pair): pair is string => Boolean(pair)))),
+    () =>
+      Array.from(
+        new Set(symbols.map(getBinanceUsdtPair).filter((pair): pair is string => Boolean(pair))),
+      ),
     [symbolsKey],
   );
 
@@ -69,7 +72,6 @@ export const useBinanceTickers = (symbols: string[]) => {
       };
 
       socket.onerror = () => socket.close();
-
     };
 
     pendingTickersRef.current = new Map();

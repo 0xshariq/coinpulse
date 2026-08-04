@@ -10,7 +10,8 @@ import Link from 'next/link';
 const CoinsClient = ({ coins }: { coins: CoinMarketData[] }) => {
   const tickers = useBinanceTickers(coins.map((coin) => coin.symbol));
 
-  const columns: (DataTableColumn<CoinMarketData> & ({ id: string | number } | { key: string | number }))[] = [
+  const columns: (DataTableColumn<CoinMarketData> &
+    ({ id: string | number } | { key: string | number }))[] = [
     {
       id: 'rank',
       header: 'Rank',
@@ -75,7 +76,14 @@ const CoinsClient = ({ coins }: { coins: CoinMarketData[] }) => {
     },
   ];
 
-  return <DataTable tableClassName="coins-table" columns={columns} data={coins} rowKey={(coin) => coin.id} />;
+  return (
+    <DataTable
+      tableClassName="coins-table"
+      columns={columns}
+      data={coins}
+      rowKey={(coin) => coin.id}
+    />
+  );
 };
 
 export default CoinsClient;

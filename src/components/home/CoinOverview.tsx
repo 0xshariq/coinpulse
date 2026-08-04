@@ -9,7 +9,7 @@ const CoinOverview = async () => {
   try {
     // Fetch coin details in parallel
     const coinPromises = ids.map((id) =>
-      fetcher<CoinDetailsData>(`/coins/${id}`, { dex_pair_format: 'symbol' })
+      fetcher<CoinDetailsData>(`/coins/${id}`, { dex_pair_format: 'symbol' }),
     );
 
     const coins = await Promise.all(coinPromises);

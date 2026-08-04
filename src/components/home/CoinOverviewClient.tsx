@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -30,7 +30,8 @@ const CoinOverviewClient: React.FC<Props> = ({ coinsData }) => {
           <button
             key={id}
             onClick={() => setSelected(id)}
-            className={`px-3 py-1 rounded ${selected === id ? 'bg-slate-800 text-white' : 'bg-transparent text-slate-400'}`}>
+            className={`px-3 py-1 rounded ${selected === id ? 'bg-slate-800 text-white' : 'bg-transparent text-slate-400'}`}
+          >
             {id.charAt(0).toUpperCase() + id.slice(1)}
           </button>
         ))}
@@ -46,15 +47,23 @@ const CoinOverviewClient: React.FC<Props> = ({ coinsData }) => {
         setLiveInterval={setLiveInternal}
       >
         <div className="header pt-2 flex items-center gap-3">
-          <Image src={active.coin.image.large} alt={active.coin.name} width={56} height={56} style={{ width: 'auto', height: 'auto' }} />
+          <Image
+            src={active.coin.image.large}
+            alt={active.coin.name}
+            width={56}
+            height={56}
+            style={{ width: 'auto', height: 'auto' }}
+          />
           <div className="info">
-              <p className="whitespace-nowrap">
-                <span className="font-semibold text-sm md:text-base">{active.coin.name}</span>
-                <span className="ml-2 text-xs md:text-sm text-purple-100/70">/ {active.coin.symbol.toUpperCase()}</span>
-              </p>
-              <h1 className="text-xl md:text-2xl">
-                {formatCurrency(price?.usd ?? active.coin.market_data.current_price.usd)}
-              </h1>
+            <p className="whitespace-nowrap">
+              <span className="font-semibold text-sm md:text-base">{active.coin.name}</span>
+              <span className="ml-2 text-xs md:text-sm text-purple-100/70">
+                / {active.coin.symbol.toUpperCase()}
+              </span>
+            </p>
+            <h1 className="text-xl md:text-2xl">
+              {formatCurrency(price?.usd ?? active.coin.market_data.current_price.usd)}
+            </h1>
           </div>
         </div>
       </CandlestickChart>

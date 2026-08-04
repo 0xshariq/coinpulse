@@ -5,6 +5,60 @@ import { ArrowUpRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import LiveDataWrapper from '@/components/LiveDataWrapper';
 import Converter from '@/components/Converter';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: NextPageProps): Promise<Metadata> {
+  try {
+    const { id } = await params;
+    const coinData = await fetcher<CoinDetailsData>(`/coins/${id}`, {
+      dex_pair_format: 'contract_address',
+    }).catch(() => null);
+
+    if (!coinData) {
+      return {
+        title: 'Coin Not Found | CoinPulse',
+        description: 'The coin you are looking for does not exist.',
+      };
+    }
+
+    const title = `${coinData.name} (${coinData.symbol.toUpperCase()}) | CoinPulse`;
+    const description = coinData.description?.en
+      ? coinData.description.en.replace(/<[^>]*>/g, '').slice(0, 160)
+      : `Get live price, charts, and market data for ${coinData.name}.`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        images: [
+          {
+            url: coinData.image?.large || coinData.image?.small || '/og-image.png',
+            width: 1200,
+            height: 630,
+            alt: coinData.name,
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [coinData.image?.large || coinData.image?.small || '/og-image.png'],
+      },
+      alternates: {
+        canonical: `https://coinpulse.vercel.app/coins/${id}`,
+      },
+    };
+  } catch {
+    return {
+      title: 'Coin Details | CoinPulse',
+      description: 'View detailed information about cryptocurrencies on CoinPulse.',
+    };
+  }
+}
 
 const Page = async ({ params }: NextPageProps) => {
   const { id } = await params;
@@ -46,19 +100,19 @@ const Page = async ({ params }: NextPageProps) => {
             value: binanceTicker.symbol,
           },
           {
-            label: 'Binance 24h High',
+            label: 'Binance 24h High (snapshot)',
             value: formatCurrency(Number(binanceTicker.highPrice)),
           },
           {
-            label: 'Binance 24h Low',
+            label: 'Binance 24h Low (snapshot)',
             value: formatCurrency(Number(binanceTicker.lowPrice)),
           },
           {
-            label: 'Binance 24h Volume',
+            label: 'Binance 24h Volume (snapshot)',
             value: formatCurrency(Number(binanceTicker.quoteVolume)),
           },
           {
-            label: 'Binance Trades (24h)',
+            label: 'Binance Trades (24h) (snapshot)',
             value: binanceTicker.count.toLocaleString('en-US'),
           },
         ]
@@ -86,7 +140,12 @@ const Page = async ({ params }: NextPageProps) => {
   return (
     <main id="coin-details-page">
       <section className="primary">
-        <LiveDataWrapper coinId={id} binanceSymbol={coinData.symbol} coin={coinData} coinOHLCData={coinOHLCData}>
+        <LiveDataWrapper
+          coinId={id}
+          binanceSymbol={coinData.symbol}
+          coin={coinData}
+          coinOHLCData={coinOHLCData}
+        >
           <h4>Exchange Listings</h4>
         </LiveDataWrapper>
       </section>

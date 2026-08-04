@@ -42,7 +42,12 @@ export const useBinanceWebSocket = ({
     const connect = () => {
       if (disposed || !pair) return;
 
-      const streams = [`${pair}@ticker`, `${pair}@aggTrade`, `${pair}@kline_${liveInterval}`, `${pair}@bookTicker`];
+      const streams = [
+        `${pair}@ticker`,
+        `${pair}@aggTrade`,
+        `${pair}@kline_${liveInterval}`,
+        `${pair}@bookTicker`,
+      ];
       const socket = new WebSocket(`${BINANCE_WS_BASE}${streams.join('/')}`);
       socketRef.current = socket;
 
@@ -93,17 +98,19 @@ export const useBinanceWebSocket = ({
         if (data.e === 'aggTrade') {
           const tradePrice = Number(data.p);
           const amount = Number(data.q);
-          setTrades((previous) => [
-            {
-              price: tradePrice,
-              amount,
-              value: tradePrice * amount,
-              timestamp: data.T,
-              // Binance's `m` means the buyer is the market maker, so the taker sold.
-              type: data.m ? 's' : 'b',
-            },
-            ...previous,
-          ].slice(0, 7));
+          setTrades((previous) =>
+            [
+              {
+                price: tradePrice,
+                amount,
+                value: tradePrice * amount,
+                timestamp: data.T,
+                // Binance's `m` means the buyer is the market maker, so the taker sold.
+                type: data.m ? 's' : 'b',
+              },
+              ...previous,
+            ].slice(0, 7),
+          );
           return;
         }
 

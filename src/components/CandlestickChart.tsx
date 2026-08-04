@@ -10,6 +10,7 @@ import {
 } from '@/lib/constants';
 import { CandlestickSeries, createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
 import { convertOHLCData } from '@/lib/utils';
+import { BoundedCache } from '@/lib/boundedCache';
 
 const CandlestickChart = ({
   children,
@@ -34,8 +35,8 @@ const CandlestickChart = ({
   const [ohlcData, setOhlcData] = useState<OHLCData[]>(data ?? []);
   const [isLoadingPeriod, setIsLoadingPeriod] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const cacheRef = useRef<Map<string, { data: OHLCData[]; expires: number }>>(new Map());
-  const SESSION_CACHE_KEY = 'cp_ohlc_cache_v1';
+  const cacheRef = useRef<BoundedCache<OHLCData[]> | null>(null);
+  const prevCoinIdRef = useRef<string | undefined>(coinId);
 
   const getTtlForDays = (days: number | string) => {
     if (typeof days === 'string') {
@@ -55,12 +56,16 @@ const CandlestickChart = ({
     const { days, interval } = PERIOD_CONFIG[selectedPeriod];
     setIsLoadingPeriod(true);
     try {
+      // Initialize cache if not already done
+      if (!cacheRef.current) {
+        cacheRef.current = new BoundedCache<OHLCData[]>(50); // Max 50 entries
+      }
+
       const intervalKey = interval ?? 'auto';
       const cacheKey = `${coinId}-${days}-${intervalKey}`;
       const cached = cacheRef.current.get(cacheKey);
-      const now = Date.now();
-      if (cached && cached.expires > now) {
-        return cached.data ?? [];
+      if (cached) {
+        return cached;
       }
 
       const params = new URLSearchParams({ coinId, days: String(days) });
@@ -76,15 +81,9 @@ const CandlestickChart = ({
 
       const newData: OHLCData[] = await res.json();
 
-      // store in cache with ttl matching server logic
+      // Store in cache with TTL matching server logic
       const ttl = getTtlForDays(days) * 1000;
-      cacheRef.current.set(cacheKey, { data: newData ?? [], expires: Date.now() + ttl });
-      try {
-        const serial = Array.from(cacheRef.current.entries());
-        sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(serial));
-      } catch (e) {
-        // ignore sessionStorage errors
-      }
+      cacheRef.current.set(cacheKey, newData ?? [], ttl);
 
       return newData ?? [];
     } catch (e) {
@@ -153,24 +152,30 @@ const CandlestickChart = ({
     };
   }, [height, period]);
 
-  // Hydrate cache from sessionStorage on mount and seed cache with server-provided data
+  // Sync ohlcData when the data prop changes
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(SESSION_CACHE_KEY);
-      if (raw) {
-        const parsed: [string, { data: OHLCData[]; expires: number }][] = JSON.parse(raw);
-        const map = new Map(parsed);
-        const now = Date.now();
-        // remove expired
-        for (const [k, v] of map.entries()) {
-          if (!v || v.expires <= now) map.delete(k);
-        }
-        cacheRef.current = map;
-      }
-    } catch (e) {
-      // ignore
+    if (data && data.length > 0) {
+      startTransition(() => setOhlcData(data));
+    }
+  }, [data]);
+
+  // Reset period and data when coinId changes
+  useEffect(() => {
+    if (prevCoinIdRef.current !== coinId) {
+      setPeriod(initialPeriod);
+      setOhlcData(data ?? []);
+      prevCoinIdRef.current = coinId;
+    }
+  }, [coinId, initialPeriod, data]);
+
+  // Initialize cache on mount and seed with server-provided data
+  useEffect(() => {
+    // Initialize bounded cache
+    if (!cacheRef.current) {
+      cacheRef.current = new BoundedCache<OHLCData[]>(50);
     }
 
+    // Seed cache with initial data from server
     try {
       const { days, interval } = PERIOD_CONFIG[period];
       const cacheKey = `${coinId}-${days}-${interval ?? 'auto'}`;
@@ -178,19 +183,19 @@ const CandlestickChart = ({
 
       if (data && data.length) {
         const ttl = getTtlForDays(days) * 1000;
-        cacheRef.current.set(cacheKey, { data: data ?? [], expires: Date.now() + ttl });
-        const serial = Array.from(cacheRef.current.entries());
-        try {
-          sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(serial));
-        } catch {
-          // ignore sessionStorage errors
-        }
-      } else if (cached && cached.expires > Date.now()) {
-        startTransition(() => setOhlcData(cached.data ?? []));
+        cacheRef.current.set(cacheKey, data ?? [], ttl);
+      } else if (cached) {
+        startTransition(() => setOhlcData(cached));
       }
-    } catch (e) {
-      // ignore
+    } catch {
+      // ignore cache initialization errors
     }
+
+    // Cleanup on unmount
+    return () => {
+      // Note: We keep the cache alive for potential reuse in the same session
+      // but could call cacheRef.current?.destroy() if needed
+    };
   }, []);
 
   useEffect(() => {

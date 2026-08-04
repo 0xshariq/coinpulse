@@ -20,20 +20,36 @@ export function formatCurrency(
   currency?: string,
   showSymbol?: boolean,
 ) {
-  if (value === null || value === undefined || isNaN(value)) {
+  // Validate input is a finite number
+  if (!isFiniteNumber(value)) {
     return showSymbol !== false ? '$0.00' : '0.00';
   }
 
   // Use a fixed locale to avoid server/client locale mismatches during SSR hydration.
   const locale = 'en-US';
+  const currencyUpper = currency?.toUpperCase() || 'USD';
+
   if (showSymbol === undefined || showSymbol === true) {
-    return value.toLocaleString(locale, {
-      style: 'currency',
-      currency: currency?.toUpperCase() || 'USD',
-      minimumFractionDigits: digits ?? 2,
-      maximumFractionDigits: digits ?? 2,
-    });
+    try {
+      // Format with currency symbol, applying specified decimal digits
+      const fractionDigits = digits ?? 2;
+      const formatter = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currencyUpper,
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
+      });
+      return formatter.format(value);
+    } catch {
+      // Fall back to numeric formatting if currency code is invalid (e.g., "bits", "sats")
+      console.warn(`[formatCurrency] Invalid currency code: ${currencyUpper}`);
+      return value.toLocaleString(locale, {
+        minimumFractionDigits: digits ?? 2,
+        maximumFractionDigits: digits ?? 2,
+      });
+    }
   }
+
   return value.toLocaleString(locale, {
     minimumFractionDigits: digits ?? 2,
     maximumFractionDigits: digits ?? 2,
@@ -87,14 +103,128 @@ export function timeAgo(date: string | number | Date): string {
 
 export function convertOHLCData(data: OHLCData[]) {
   return data
-    .map((d) => ({
-      time: d[0] as Time, // ensure seconds, not ms
-      open: d[1],
-      high: d[2],
-      low: d[3],
-      close: d[4],
-    }))
-    .filter((item, index, arr) => index === 0 || item.time !== arr[index - 1].time);
+    .map((d) => {
+      // Validate and coerce all numeric values to safe numbers
+      const time = Number(d[0]);
+      const open = Number(d[1]);
+      const high = Number(d[2]);
+      const low = Number(d[3]);
+      const close = Number(d[4]);
+
+      // Skip candles with invalid data; time and OHLC values must all be non-negative
+      if (
+        !isNonNegativeNumber(time) ||
+        !isNonNegativeNumber(open) ||
+        !isNonNegativeNumber(high) ||
+        !isNonNegativeNumber(low) ||
+        !isNonNegativeNumber(close)
+      ) {
+        return null;
+      }
+
+      return {
+        time: time as Time,
+        open,
+        high,
+        low,
+        close,
+      };
+    })
+    .filter((item): item is { time: Time; open: number; high: number; low: number; close: number } => item !== null)
+    .filter((item, index, arr) => index === 0 || item.time !== (arr[index - 1]?.time ?? -1));
+}
+
+/**
+ * Checks if a value is a finite number (not NaN, Infinity, etc)
+ */
+export function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+/**
+ * Checks if a value is a non-negative finite number
+ */
+export function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+/**
+ * Common fiat currency codes that Intl.NumberFormat supports
+ */
+const SUPPORTED_FIAT_CURRENCIES = new Set([
+  'usd',
+  'eur',
+  'gbp',
+  'jpy',
+  'cad',
+  'aud',
+  'chf',
+  'cny',
+  'inr',
+  'mxn',
+  'brl',
+  'zar',
+  'hkd',
+  'sgd',
+  'nzd',
+  'isk',
+  'sek',
+  'nok',
+  'dkk',
+  'pln',
+  'czk',
+  'huf',
+  'ron',
+  'bgn',
+  'hrk',
+  'uah',
+  'rub',
+  'try',
+  'aed',
+  'sar',
+  'qar',
+  'kwd',
+  'bhd',
+  'omr',
+  'jod',
+  'lbp',
+  'egp',
+  'thb',
+  'myr',
+  'php',
+  'idr',
+  'vnd',
+  'pkr',
+  'bdt',
+]);
+
+/**
+ * Filters a price list to only include supported fiat currencies
+ * @param priceList - Object with currency codes as keys and prices as values
+ * @returns Filtered object with only supported fiat currencies
+ */
+export function filterFiatCurrencies(priceList: Record<string, number>): Record<string, number> {
+  if (!priceList || typeof priceList !== 'object') {
+    return { usd: 0 };
+  }
+
+  const filtered: Record<string, number> = {};
+
+  for (const [currency, price] of Object.entries(priceList)) {
+    const currencyLower = String(currency).toLowerCase();
+
+    // Only include supported fiat currencies with valid prices
+    if (SUPPORTED_FIAT_CURRENCIES.has(currencyLower) && isNonNegativeNumber(price)) {
+      filtered[currencyLower] = price;
+    }
+  }
+
+  // Ensure USD is always present as fallback
+  if (!filtered.usd && priceList.usd && isNonNegativeNumber(priceList.usd)) {
+    filtered.usd = priceList.usd;
+  }
+
+  return Object.keys(filtered).length > 0 ? filtered : { usd: 0 };
 }
 
 export const ELLIPSIS = 'ellipsis' as const;

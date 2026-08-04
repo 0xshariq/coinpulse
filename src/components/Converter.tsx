@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, filterFiatCurrencies } from '@/lib/utils';
 
 import {
   Select,
@@ -16,10 +16,16 @@ import {
 } from '@/components/ui/select';
 
 const Converter = ({ symbol, icon, priceList }: ConverterProps) => {
-  const [currency, setCurrency] = useState('usd');
+  // Filter to only supported fiat currencies
+  const filteredPrices = useMemo(() => filterFiatCurrencies(priceList || {}), [priceList]);
+
+  const [currency, setCurrency] = useState(() => {
+    // Start with USD if available, otherwise first available currency
+    return Object.keys(filteredPrices)[0] || 'usd';
+  });
   const [amount, setAmount] = useState('10');
 
-  const convertedPrice = (parseFloat(amount) || 0) * (priceList[currency] || 0);
+  const convertedPrice = (parseFloat(amount) || 0) * (filteredPrices[currency] || 0);
 
   return (
     <div id="converter">
@@ -35,7 +41,13 @@ const Converter = ({ symbol, icon, priceList }: ConverterProps) => {
             className="input"
           />
           <div className="coin-info">
-            <Image src={icon} alt={symbol} width={20} height={20} style={{ width: 'auto', height: 'auto' }} />
+            <Image
+              src={icon}
+              alt={symbol}
+              width={20}
+              height={20}
+              style={{ width: 'auto', height: 'auto' }}
+            />
             <p>{symbol.toUpperCase()}</p>
           </div>
         </div>
@@ -43,7 +55,14 @@ const Converter = ({ symbol, icon, priceList }: ConverterProps) => {
         <div className="divider">
           <div className="line" />
 
-          <Image src="/assets/converter.svg" alt="converter" width={32} height={32} className="icon" style={{ width: 'auto', height: 'auto' }} />
+          <Image
+            src="/assets/converter.svg"
+            alt="converter"
+            width={32}
+            height={32}
+            className="icon"
+            style={{ width: 'auto', height: 'auto' }}
+          />
         </div>
 
         <div className="output-wrapper">
@@ -56,7 +75,7 @@ const Converter = ({ symbol, icon, priceList }: ConverterProps) => {
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="select-content" data-converter>
-              {Object.keys(priceList).map((currencyCode) => (
+              {Object.keys(filteredPrices).map((currencyCode) => (
                 <SelectItem value={currencyCode} key={currencyCode} className="select-item">
                   {currencyCode.toUpperCase()}
                 </SelectItem>
