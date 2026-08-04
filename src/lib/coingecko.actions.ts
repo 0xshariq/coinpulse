@@ -7,11 +7,7 @@ import { APIError } from './apiClient';
  * Legacy fetcher function for backward compatibility
  * Wraps the new APIClient to maintain existing behavior
  */
-export async function fetcher<T>(
-  endpoint: string,
-  params?: QueryParams,
-  _revalidate = 60,
-): Promise<T> {
+export async function fetcher<T>(endpoint: string, params?: QueryParams): Promise<T> {
   try {
     const result = await coingeckoClient.get<T>(endpoint, {
       params: (params as Record<string, string | number | boolean>) || {},

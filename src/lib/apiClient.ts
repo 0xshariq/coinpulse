@@ -23,24 +23,6 @@ function validateRequired<T>(value: T | null | undefined, fieldName: string): as
 }
 
 /**
- * Validates that data is an array
- */
-function validateArray<T>(data: unknown, fieldName: string): asserts data is T[] {
-  if (!Array.isArray(data)) {
-    throw new Error(`Expected array for ${fieldName}, got ${typeof data}`);
-  }
-}
-
-/**
- * Validates that a value is an object
- */
-function validateObject(data: unknown, fieldName: string): asserts data is Record<string, unknown> {
-  if (typeof data !== 'object' || data === null) {
-    throw new Error(`Expected object for ${fieldName}, got ${typeof data}`);
-  }
-}
-
-/**
  * API Client configuration
  */
 interface APIClientConfig {

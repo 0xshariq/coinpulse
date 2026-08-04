@@ -18,8 +18,50 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'CoinPulse',
-  description: 'Crypto Screener App with a built-in High-Frequency Terminal & Dashboard.',
+  title: {
+    default: 'CoinPulse - Live Crypto Dashboard',
+    template: '%s | CoinPulse',
+  },
+  description:
+    'CoinPulse is a lightweight crypto dashboard with live prices, interactive charts, and real-time market data. Track your favorite cryptocurrencies with Binance integration.',
+  keywords: [
+    'cryptocurrency',
+    'bitcoin',
+    'ethereum',
+    'crypto prices',
+    'crypto dashboard',
+    'binance',
+    'live charts',
+    'market data',
+  ],
+  authors: [{ name: 'CoinPulse' }],
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://coinpulse.vercel.app',
+    siteName: 'CoinPulse',
+    title: 'CoinPulse - Live Crypto Dashboard',
+    description:
+      'CoinPulse is a lightweight crypto dashboard with live prices, interactive charts, and real-time market data.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'CoinPulse - Live Crypto Dashboard',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CoinPulse - Live Crypto Dashboard',
+    description:
+      'CoinPulse is a lightweight crypto dashboard with live prices, interactive charts, and real-time market data.',
+    images: ['/og-image.png'],
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

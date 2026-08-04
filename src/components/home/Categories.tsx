@@ -9,15 +9,39 @@ const Categories = async () => {
   try {
     const categories = await fetcher<Category[]>('/coins/categories');
 
-    const normalizedCategories = categories?.filter(
-      (category): category is Category => Boolean(category) && Array.isArray(category.top_3_coins),
-    );
+    if (!Array.isArray(categories) || categories.length === 0) {
+      return <CategoriesFallback />;
+    }
 
-    if (
-      !Array.isArray(categories) ||
-      categories.some((category) => !category || !Array.isArray(category.top_3_coins))
-    ) {
-      throw new Error('Malformed category data');
+    // Filter to only valid categories, logging any malformed ones
+    const validCategories = categories.filter((category) => {
+      if (!category) {
+        console.warn('[Categories] Skipping null/undefined category');
+        return false;
+      }
+
+      if (!Array.isArray(category.top_3_coins)) {
+        console.warn('[Categories] Skipping category with malformed top_3_coins:', category.name);
+        return false;
+      }
+
+      if (
+        typeof category.market_cap_change_24h !== 'number' ||
+        !Number.isFinite(category.market_cap_change_24h)
+      ) {
+        console.warn(
+          '[Categories] Skipping category with invalid market_cap_change_24h:',
+          category.name,
+        );
+        return false;
+      }
+
+      return true;
+    });
+
+    if (validCategories.length === 0) {
+      console.warn('[Categories] No valid categories found');
+      return <CategoriesFallback />;
     }
 
     const columns: (DataTableColumn<Category> &
@@ -92,14 +116,14 @@ const Categories = async () => {
 
         <DataTable
           columns={columns}
-          data={categories?.slice(0, 15)}
+          data={validCategories.slice(0, 15)}
           rowKey={(_, index) => index}
           tableClassName="mt-3"
         />
       </div>
     );
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('[Categories] Error fetching categories:', error);
     return <CategoriesFallback />;
   }
 };

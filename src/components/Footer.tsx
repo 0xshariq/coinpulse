@@ -36,12 +36,7 @@ const Footer = () => {
             </li>
             <li>
               <Link href="/coins" className="hover:text-white">
-                Top movers
-              </Link>
-            </li>
-            <li>
-              <Link href="/" className="hover:text-white">
-                Docs
+                All coins
               </Link>
             </li>
           </ul>
