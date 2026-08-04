@@ -54,11 +54,13 @@ export async function GET(request: Request) {
     // Choose a short cache TTL depending on the requested range.
     // Shorter TTL for recent data, longer for historical ranges.
     let ttl = 10; // seconds by default
-    if (daysValue === 'max' || daysValue === 1)
+    if (daysValue === 'max' || daysValue === 1) {
       ttl = 10; // live-ish
-    else if (daysValue <= 7) ttl = 30;
-    else if (daysValue <= 30) ttl = 300;
-    else ttl = 3600;
+    } else if (typeof daysValue === 'number') {
+      if (daysValue <= 7) ttl = 30;
+      else if (daysValue <= 30) ttl = 300;
+      else ttl = 3600;
+    }
 
     const headers = {
       'Cache-Control': `public, max-age=${ttl}, stale-while-revalidate=60`,

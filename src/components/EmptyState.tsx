@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface EmptyStateProps {
   icon?: React.ReactNode;
   title: string;
@@ -5,7 +7,7 @@ interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps): JSX.Element {
+export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       {icon && <div className="mb-4 text-4xl text-gray-400">{icon}</div>}
@@ -42,7 +44,7 @@ export function ErrorState({
 }: {
   message: string;
   onRetry?: () => void;
-}): JSX.Element {
+}) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-red-50 rounded-lg border border-red-200">
       <div className="mb-4 text-4xl">⚠️</div>

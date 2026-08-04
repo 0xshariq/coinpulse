@@ -128,7 +128,7 @@ export function convertOHLCData(data: OHLCData[]) {
       };
     })
     .filter(
-      (item, index, arr) =>
+      (item, index, arr): item is { time: Time; open: number; high: number; low: number; close: number } =>
         item !== null && (index === 0 || item.time !== (arr[index - 1]?.time ?? -1)),
     );
 }

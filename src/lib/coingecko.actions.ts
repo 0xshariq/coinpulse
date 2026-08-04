@@ -29,7 +29,7 @@ export async function getTrendingCoins(): Promise<TrendingCoin[]> {
   try {
     const trendingList: { coins: TrendingCoin[] } = await fetcher<{
       coins: TrendingCoin[];
-    }>('/search/trending', undefined, 300);
+    }>('/search/trending');
 
     if (!Array.isArray(trendingList.coins)) {
       throw new Error('Invalid response: coins is not an array');

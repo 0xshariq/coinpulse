@@ -190,7 +190,7 @@ export function createBoundedCacheWithStorage<T>(
 
   const syncToStorage = () => {
     try {
-      const entries = Array.from((cache as Map<string, CacheEntry<T>>).entries());
+      const entries = Array.from((cache as unknown as Map<string, CacheEntry<T>>).entries());
       storage.setItem(storageKey, JSON.stringify(entries));
     } catch (error) {
       console.error(`Failed to sync cache to storage:`, error);

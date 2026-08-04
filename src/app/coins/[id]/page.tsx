@@ -100,19 +100,19 @@ const Page = async ({ params }: NextPageProps) => {
             value: binanceTicker.symbol,
           },
           {
-            label: 'Binance 24h High',
+            label: 'Binance 24h High (snapshot)',
             value: formatCurrency(Number(binanceTicker.highPrice)),
           },
           {
-            label: 'Binance 24h Low',
+            label: 'Binance 24h Low (snapshot)',
             value: formatCurrency(Number(binanceTicker.lowPrice)),
           },
           {
-            label: 'Binance 24h Volume',
+            label: 'Binance 24h Volume (snapshot)',
             value: formatCurrency(Number(binanceTicker.quoteVolume)),
           },
           {
-            label: 'Binance Trades (24h)',
+            label: 'Binance Trades (24h) (snapshot)',
             value: binanceTicker.count.toLocaleString('en-US'),
           },
         ]
