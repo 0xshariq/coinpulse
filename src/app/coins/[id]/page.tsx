@@ -162,7 +162,7 @@ const Page = async ({ params }: NextPageProps) => {
 
           <ul className="details-grid">
             {coinDetails.map(({ label, value, link, linkText }, index) => (
-              <li key={index}>
+              <li key={index} className='overflow-auto'>
                 <p className={label}>{label}</p>
 
                 {link ? (
