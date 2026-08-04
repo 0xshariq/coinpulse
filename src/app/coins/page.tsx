@@ -1,13 +1,12 @@
-import { fetcher } from "@/lib/coingecko.actions";
+import { fetcher } from '@/lib/coingecko.actions';
 import CoinsClient from '@/components/CoinsClient';
 
 const Coins = async () => {
-
-  const coinsData = await fetcher<CoinMarketData[]>("/coins/markets", {
-    vs_currency: "usd",
-    order: "market_cap_desc",
-    sparkline: "false",
-    price_change_percentage: "24h",
+  const coinsData = await fetcher<CoinMarketData[]>('/coins/markets', {
+    vs_currency: 'usd',
+    order: 'market_cap_desc',
+    sparkline: 'false',
+    price_change_percentage: '24h',
   });
 
   return (

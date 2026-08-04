@@ -312,7 +312,11 @@ interface BinanceBookTicker {
   askQuantity: number;
 }
 
-type BinanceStreamData = BinanceTickerMessage | BinanceAggregateTradeMessage | BinanceKlineMessage | BinanceBookTickerMessage;
+type BinanceStreamData =
+  | BinanceTickerMessage
+  | BinanceAggregateTradeMessage
+  | BinanceKlineMessage
+  | BinanceBookTickerMessage;
 
 interface BinanceCombinedStreamMessage {
   stream: string;

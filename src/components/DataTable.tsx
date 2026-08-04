@@ -54,7 +54,11 @@ const DataTable = <T,>({
               return (
                 <TableCell
                   key={colId}
-                  className={cn('py-4 first:pl-5 last:pr-5', bodyCellClassName, column.cellClassName)}
+                  className={cn(
+                    'py-4 first:pl-5 last:pr-5',
+                    bodyCellClassName,
+                    column.cellClassName,
+                  )}
                 >
                   {column.cell(row, rowIndex)}
                 </TableCell>

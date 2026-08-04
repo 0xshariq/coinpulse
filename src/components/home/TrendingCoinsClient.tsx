@@ -11,7 +11,8 @@ import Link from 'next/link';
 const TrendingCoinsClient = ({ coins }: { coins: TrendingCoin[] }) => {
   const tickers = useBinanceTickers(coins.map((coin) => coin.item.symbol));
 
-  const columns: (DataTableColumn<TrendingCoin> & ({ id: string | number } | { key: string | number }))[] = [
+  const columns: (DataTableColumn<TrendingCoin> &
+    ({ id: string | number } | { key: string | number }))[] = [
     {
       id: 'name',
       header: 'Name',
@@ -20,10 +21,18 @@ const TrendingCoinsClient = ({ coins }: { coins: TrendingCoin[] }) => {
         const coinData = coin.item;
         return (
           <Link href={`/coins/${coinData.id}`}>
-            <Image src={coinData.large} alt={coinData.name} width={36} height={36} style={{ width: 'auto', height: 'auto' }} />
+            <Image
+              src={coinData.large}
+              alt={coinData.name}
+              width={36}
+              height={36}
+              style={{ width: 'auto', height: 'auto' }}
+            />
             <p className="whitespace-nowrap">
               <span className="font-semibold text-sm md:text-base">{coinData.name}</span>
-              <span className="ml-2 text-xs md:text-sm text-purple-100/70">/ {coinData.symbol.toUpperCase()}</span>
+              <span className="ml-2 text-xs md:text-sm text-purple-100/70">
+                / {coinData.symbol.toUpperCase()}
+              </span>
             </p>
           </Link>
         );
@@ -53,7 +62,11 @@ const TrendingCoinsClient = ({ coins }: { coins: TrendingCoin[] }) => {
           <div className={cn('price-change', isTrendingUp ? 'text-green-500' : 'text-red-500')}>
             <p className="flex items-center">
               {formatPercentage(change)}
-              {isTrendingUp ? <TrendingUp width={16} height={16} className="ml-1" /> : <TrendingDown width={16} height={16} className="ml-1" />}
+              {isTrendingUp ? (
+                <TrendingUp width={16} height={16} className="ml-1" />
+              ) : (
+                <TrendingDown width={16} height={16} className="ml-1" />
+              )}
             </p>
           </div>
         );

@@ -10,9 +10,15 @@ const Navbar = async () => {
 
   return (
     <header>
-      <div className='container inner'>
-        <Link href='/'>
-          <Image src='/assets/logo.svg' alt='CoinPulse Logo' width={132} height={40} style={{ width: 'auto', height: 'auto' }} />
+      <div className="container inner">
+        <Link href="/">
+          <Image
+            src="/assets/logo.svg"
+            alt="CoinPulse Logo"
+            width={132}
+            height={40}
+            style={{ width: 'auto', height: 'auto' }}
+          />
         </Link>
 
         <nav>
@@ -20,7 +26,7 @@ const Navbar = async () => {
         </nav>
       </div>
     </header>
-  )
-}
+  );
+};
 
 export default Navbar;

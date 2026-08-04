@@ -8,14 +8,21 @@ import { formatCurrency, timeAgo } from '@/lib/utils';
 import { useState } from 'react';
 import CoinHeader from '@/components/CoinHeader';
 
-const LiveDataWrapper = ({ children, coinId, binanceSymbol, coin, coinOHLCData }: LiveDataProps) => {
+const LiveDataWrapper = ({
+  children,
+  coinId,
+  binanceSymbol,
+  coin,
+  coinOHLCData,
+}: LiveDataProps) => {
   const [liveInterval, setLiveInterval] = useState<'1s' | '1m'>('1s');
   const { trades, ohlcv, price, bookTicker, isConnected, isAvailable } = useBinanceWebSocket({
     symbol: binanceSymbol,
     liveInterval,
   });
 
-  const tradeColumns: (DataTableColumn<Trade> & ({ id: string | number } | { key: string | number }))[] = [
+  const tradeColumns: (DataTableColumn<Trade> &
+    ({ id: string | number } | { key: string | number }))[] = [
     {
       id: 'price',
       header: 'Price',
@@ -52,7 +59,8 @@ const LiveDataWrapper = ({ children, coinId, binanceSymbol, coin, coinOHLCData }
     },
   ];
 
-  const exchangeColumns: (DataTableColumn<Ticker> & ({ id: string | number } | { key: string | number }))[] = [
+  const exchangeColumns: (DataTableColumn<Ticker> &
+    ({ id: string | number } | { key: string | number }))[] = [
     {
       id: 'exchange',
       header: 'Exchange',
@@ -81,11 +89,14 @@ const LiveDataWrapper = ({ children, coinId, binanceSymbol, coin, coinOHLCData }
         { side: 'Ask', price: bookTicker.askPrice, amount: bookTicker.askQuantity },
       ]
     : [];
-  const orderBookColumns: (DataTableColumn<(typeof orderBookRows)[number]> & ({ id: string | number } | { key: string | number }))[] = [
+  const orderBookColumns: (DataTableColumn<(typeof orderBookRows)[number]> &
+    ({ id: string | number } | { key: string | number }))[] = [
     {
       id: 'side',
       header: 'Side',
-      cell: (row) => <span className={row.side === 'Bid' ? 'text-green-500' : 'text-red-500'}>{row.side}</span>,
+      cell: (row) => (
+        <span className={row.side === 'Bid' ? 'text-green-500' : 'text-red-500'}>{row.side}</span>
+      ),
     },
     {
       id: 'price',

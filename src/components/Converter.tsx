@@ -35,7 +35,13 @@ const Converter = ({ symbol, icon, priceList }: ConverterProps) => {
             className="input"
           />
           <div className="coin-info">
-            <Image src={icon} alt={symbol} width={20} height={20} style={{ width: 'auto', height: 'auto' }} />
+            <Image
+              src={icon}
+              alt={symbol}
+              width={20}
+              height={20}
+              style={{ width: 'auto', height: 'auto' }}
+            />
             <p>{symbol.toUpperCase()}</p>
           </div>
         </div>
@@ -43,7 +49,14 @@ const Converter = ({ symbol, icon, priceList }: ConverterProps) => {
         <div className="divider">
           <div className="line" />
 
-          <Image src="/assets/converter.svg" alt="converter" width={32} height={32} className="icon" style={{ width: 'auto', height: 'auto' }} />
+          <Image
+            src="/assets/converter.svg"
+            alt="converter"
+            width={32}
+            height={32}
+            className="icon"
+            style={{ width: 'auto', height: 'auto' }}
+          />
         </div>
 
         <div className="output-wrapper">

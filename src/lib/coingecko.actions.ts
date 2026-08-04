@@ -67,8 +67,12 @@ export async function fetcher<T>(
 }
 
 export async function getTrendingCoins(): Promise<TrendingCoin[]> {
-    const trendingList: { coins: TrendingCoin[] } = await fetcher<{ coins: TrendingCoin[] }>("/search/trending", undefined, 300);
-    return trendingList.coins;
+  const trendingList: { coins: TrendingCoin[] } = await fetcher<{ coins: TrendingCoin[] }>(
+    '/search/trending',
+    undefined,
+    300,
+  );
+  return trendingList.coins;
 }
 
 export async function searchCoins(query: string): Promise<SearchCoin[]> {
@@ -86,7 +90,7 @@ export async function searchCoins(query: string): Promise<SearchCoin[]> {
       large: string;
       market_cap_rank: number;
     }[];
-  }>("/search", {
+  }>('/search', {
     query: trimmedQuery,
   });
 
@@ -95,20 +99,18 @@ export async function searchCoins(query: string): Promise<SearchCoin[]> {
   if (coins.length === 0) return [];
 
   // 2. Extract ids
-  const ids = coins.map((coin) => coin.id).join(",");
+  const ids = coins.map((coin) => coin.id).join(',');
 
   // 3. Fetch market data
-  const marketData = await fetcher<CoinMarketData[]>("/coins/markets", {
-    vs_currency: "usd",
+  const marketData = await fetcher<CoinMarketData[]>('/coins/markets', {
+    vs_currency: 'usd',
     ids,
     sparkline: false,
-    price_change_percentage: "24h",
+    price_change_percentage: '24h',
   });
 
   // 4. Convert market data into a lookup map
-  const marketMap = new Map(
-    marketData.map((coin) => [coin.id, coin])
-  );
+  const marketMap = new Map(marketData.map((coin) => [coin.id, coin]));
 
   // 5. Merge search + market data
   return coins.map((coin) => {
@@ -123,8 +125,7 @@ export async function searchCoins(query: string): Promise<SearchCoin[]> {
       market_cap_rank: market?.market_cap_rank ?? coin.market_cap_rank,
       data: {
         price: market?.current_price ?? 0,
-        price_change_percentage_24h:
-          market?.price_change_percentage_24h ?? 0,
+        price_change_percentage_24h: market?.price_change_percentage_24h ?? 0,
       },
     };
   });
