@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://coinpulse.vercel.app'),
+  metadataBase: new URL('https://coinpulse-ten-psi.vercel.app/'),
   title: {
     default: 'CoinPulse - Live Crypto Dashboard',
     template: '%s | CoinPulse',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://coinpulse.vercel.app',
+    url: 'https://coinpulse-ten-psi.vercel.app/',
     siteName: 'CoinPulse',
     title: 'CoinPulse - Live Crypto Dashboard',
     description:
