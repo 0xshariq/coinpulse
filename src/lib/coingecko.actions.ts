@@ -1,7 +1,6 @@
 'use server';
 
 import { coingeckoClient } from './coingeckoClient';
-import { APIError } from './apiClient';
 
 /**
  * Legacy fetcher function for backward compatibility
