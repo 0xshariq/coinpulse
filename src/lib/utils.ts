@@ -31,12 +31,15 @@ export function formatCurrency(
 
   if (showSymbol === undefined || showSymbol === true) {
     try {
-      // Verify that the currency code is valid for Intl.NumberFormat
-      const testFormatter = new Intl.NumberFormat(locale, {
+      // Format with currency symbol, applying specified decimal digits
+      const fractionDigits = digits ?? 2;
+      const formatter = new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: currencyUpper,
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
       });
-      return testFormatter.format(value);
+      return formatter.format(value);
     } catch {
       // Fall back to numeric formatting if currency code is invalid (e.g., "bits", "sats")
       console.warn(`[formatCurrency] Invalid currency code: ${currencyUpper}`);
@@ -108,13 +111,13 @@ export function convertOHLCData(data: OHLCData[]) {
       const low = Number(d[3]);
       const close = Number(d[4]);
 
-      // Skip candles with invalid data
+      // Skip candles with invalid data; time and OHLC values must all be non-negative
       if (
-        !isFiniteNumber(time) ||
-        !isFiniteNumber(open) ||
-        !isFiniteNumber(high) ||
-        !isFiniteNumber(low) ||
-        !isFiniteNumber(close)
+        !isNonNegativeNumber(time) ||
+        !isNonNegativeNumber(open) ||
+        !isNonNegativeNumber(high) ||
+        !isNonNegativeNumber(low) ||
+        !isNonNegativeNumber(close)
       ) {
         return null;
       }
@@ -127,16 +130,21 @@ export function convertOHLCData(data: OHLCData[]) {
         close,
       };
     })
-    .filter(
-      (item, index, arr): item is { time: Time; open: number; high: number; low: number; close: number } =>
-        item !== null && (index === 0 || item.time !== (arr[index - 1]?.time ?? -1)),
-    );
+    .filter((item): item is { time: Time; open: number; high: number; low: number; close: number } => item !== null)
+    .filter((item, index, arr) => index === 0 || item.time !== (arr[index - 1]?.time ?? -1));
 }
 
 /**
  * Checks if a value is a finite number (not NaN, Infinity, etc)
  */
 export function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+/**
+ * Checks if a value is a non-negative finite number
+ */
+export function isNonNegativeNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0;
 }
 
@@ -159,7 +167,7 @@ const SUPPORTED_FIAT_CURRENCIES = new Set([
   'hkd',
   'sgd',
   'nzd',
-  'kr',
+  'isk',
   'sek',
   'nok',
   'dkk',
@@ -206,13 +214,13 @@ export function filterFiatCurrencies(priceList: Record<string, number>): Record<
     const currencyLower = String(currency).toLowerCase();
 
     // Only include supported fiat currencies with valid prices
-    if (SUPPORTED_FIAT_CURRENCIES.has(currencyLower) && isFiniteNumber(price)) {
+    if (SUPPORTED_FIAT_CURRENCIES.has(currencyLower) && isNonNegativeNumber(price)) {
       filtered[currencyLower] = price;
     }
   }
 
   // Ensure USD is always present as fallback
-  if (!filtered.usd && priceList.usd && isFiniteNumber(priceList.usd)) {
+  if (!filtered.usd && priceList.usd && isNonNegativeNumber(priceList.usd)) {
     filtered.usd = priceList.usd;
   }
 

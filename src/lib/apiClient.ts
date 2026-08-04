@@ -85,8 +85,9 @@ export class APIClient {
   private async request<T>(method: string, endpoint: string, options?: FetchOptions): Promise<T> {
     let lastError: APIError | Error | null = null;
     let attempt = 0;
+    const maxAttempts = this.maxRetries + 1; // maxRetries represents number of retries, so total = 1 + retries
 
-    while (attempt < this.maxRetries) {
+    while (attempt < maxAttempts) {
       attempt++;
 
       try {
@@ -114,7 +115,7 @@ export class APIClient {
         }
 
         // For server errors or rate limiting, consider retrying
-        if (attempt >= this.maxRetries) {
+        if (attempt >= maxAttempts) {
           throw lastError;
         }
 
@@ -123,7 +124,7 @@ export class APIClient {
         const delayMs = this.calculateBackoffDelay(attempt, retryAfter);
 
         console.warn(
-          `[APIClient] Request failed (${response.status}), retrying in ${delayMs}ms (attempt ${attempt}/${this.maxRetries})`,
+          `[APIClient] Request failed (${response.status}), retrying in ${delayMs}ms (attempt ${attempt}/${maxAttempts})`,
         );
 
         await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -131,7 +132,7 @@ export class APIClient {
         // If it's an APIError or other expected error, check if we should retry
         if (error instanceof APIError) {
           lastError = error;
-          if (attempt >= this.maxRetries || (error.status >= 400 && error.status < 500)) {
+          if (attempt >= maxAttempts || (error.status >= 400 && error.status < 500)) {
             throw error;
           }
 
@@ -143,7 +144,7 @@ export class APIClient {
         // For timeout or network errors, retry
         if (error instanceof Error && error.name === 'AbortError') {
           lastError = new Error(`Request timeout after ${this.timeout}ms`);
-          if (attempt >= this.maxRetries) {
+          if (attempt >= maxAttempts) {
             throw lastError;
           }
 
@@ -210,18 +211,21 @@ export class APIClient {
   }
 
   /**
-   * Calculates exponential backoff delay
+   * Calculates exponential backoff delay with maximum cap
    */
   private calculateBackoffDelay(attempt: number, retryAfter: string | null): number {
+    const maxDelayMs = 30000; // 30 second maximum
+
     if (retryAfter) {
       const seconds = Number(retryAfter);
       if (!Number.isNaN(seconds)) {
-        return seconds * 1000;
+        return Math.min(seconds * 1000, maxDelayMs);
       }
     }
 
-    // Exponential backoff: 1s, 2s, 4s, 8s, etc.
-    return this.retryDelay * Math.pow(2, attempt - 1);
+    // Exponential backoff: 1s, 2s, 4s, 8s, etc., capped at maxDelayMs
+    const delay = this.retryDelay * Math.pow(2, attempt - 1);
+    return Math.min(delay, maxDelayMs);
   }
 
   /**

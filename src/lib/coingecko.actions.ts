@@ -14,9 +14,7 @@ export async function fetcher<T>(endpoint: string, params?: QueryParams): Promis
     });
     return result;
   } catch (error) {
-    if (error instanceof APIError) {
-      throw new Error(`API Error: ${error.status}: ${error.message}`);
-    }
+    // Rethrow APIError instances unchanged to preserve error.status for callers
     throw error;
   }
 }

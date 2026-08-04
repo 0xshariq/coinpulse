@@ -33,9 +33,9 @@ A lightweight, high-performance cryptocurrency dashboard with real-time price tr
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm 8+ (or npm/yarn)
-- CoinGecko API key (free tier available)
+- Node.js 20.9+ (for stability and compatibility)
+- pnpm 9+ (enable Corepack: `corepack enable`)
+- CoinGecko API key (free tier: 100 calls/minute, 10,000 monthly call-credits)
 
 ### Installation
 
@@ -44,15 +44,19 @@ A lightweight, high-performance cryptocurrency dashboard with real-time price tr
 git clone https://github.com/0xshariq/coinpulse.git
 cd coinpulse
 
+# Enable Corepack for pnpm management
+corepack enable
+
 # Install dependencies
 pnpm install
 
-# Setup environment
+# Setup environment - copy example file
 cp .env.example .env.local
 
-# Add your CoinGecko API key to .env.local
-COINGECKO_API_KEY=your_key_here
-COINGECKO_BASE_URL=https://api.coingecko.com/api/v3
+# Edit .env.local and add your credentials:
+# COINGECKO_API_KEY=your_api_key_here
+# COINGECKO_BASE_URL=https://api.coingecko.com/api/v3
+nano .env.local
 
 # Start dev server
 pnpm dev
@@ -64,7 +68,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### High-Level System Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │              Browser (Client)                           │
 │  ┌────────────────┐  ┌──────────────┐  ┌────────────┐  │
@@ -97,14 +101,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Provider | Role | Data | Why |
 |----------|------|------|-----|
-| **CoinGecko** | Primary data source | Historical OHLC, market cap, rankings, metadata, categories | Comprehensive market-wide aggregation, no rate limits on free tier |
+| **CoinGecko** | Primary data source | Historical OHLC, market cap, rankings, metadata, categories | Comprehensive market-wide aggregation; free tier: 100 calls/min, 10,000 calls/month |
 | **Binance WebSocket** | Real-time updates | Live prices, trades, candles (1s intervals) | Zero-latency public streams, no API key required |
 
 **Key Insight:** CoinGecko REST data is market-wide aggregated (accurate but cached), while Binance streams show Binance Spot USDT pair activity (live but exchange-specific). Small price differences are expected and normal.
 
 ### Server/Client Split
 
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │ SERVER COMPONENTS (Next.js)                          │
 │ ├─ Fetch from CoinGecko (API key protected)          │
@@ -128,7 +132,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| **Runtime** | Node.js 18+ | Server runtime |
+| **Runtime** | Node.js 20.9+ | Server runtime |
 | **Framework** | Next.js 16 | React framework with SSR |
 | **UI** | React 19 | Component library |
 | **Styling** | Tailwind CSS v4 | Utility-first CSS |

@@ -54,8 +54,10 @@ export async function GET(request: Request) {
     // Choose a short cache TTL depending on the requested range.
     // Shorter TTL for recent data, longer for historical ranges.
     let ttl = 10; // seconds by default
-    if (daysValue === 'max' || daysValue === 1) {
+    if (daysValue === 1) {
       ttl = 10; // live-ish
+    } else if (daysValue === 'max') {
+      ttl = 3600; // historical all-time data: 1 hour
     } else if (typeof daysValue === 'number') {
       if (daysValue <= 7) ttl = 30;
       else if (daysValue <= 30) ttl = 300;
