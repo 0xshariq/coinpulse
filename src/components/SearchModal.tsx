@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -130,59 +131,61 @@ export const SearchModal = ({
         </kbd>
       </Button>
 
-      <CommandDialog
-        open={open}
-        onOpenChange={setOpen}
-        className='dialog'
-        data-search-modal
-      >
-        <div className='cmd-input'>
-          <CommandInput
-            placeholder='Search for a token by name or symbol...'
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-          />
-        </div>
+      <Command>
+        <CommandDialog
+          open={open}
+          onOpenChange={setOpen}
+          className='dialog'
+          data-search-modal
+        >
+          <div className='cmd-input'>
+            <CommandInput
+              placeholder='Search for a token by name or symbol...'
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+            />
+          </div>
 
-        <CommandList className='list custom-scrollbar'>
-          {isSearching && <div className='empty'>Searching...</div>}
+          <CommandList className='list custom-scrollbar'>
+            {isSearching && <div className='empty'>Searching...</div>}
 
-          {isSearchEmpty && (
-            <div className='empty'>Type to search for coins...</div>
-          )}
+            {isSearchEmpty && (
+              <div className='empty'>Type to search for coins...</div>
+            )}
 
-          {isTrendingListVisible && (
-            <CommandGroup className='group'>
-              {trendingCoins.map(({ item }) => (
-                <SearchItem
-                  key={item.id}
-                  coin={item}
-                  onSelect={handleSelect}
-                  isActiveName={false}
-                />
-              ))}
-            </CommandGroup>
-          )}
+            {isTrendingListVisible && (
+              <CommandGroup className='group'>
+                {trendingCoins.map(({ item }) => (
+                  <SearchItem
+                    key={item.id}
+                    coin={item}
+                    onSelect={handleSelect}
+                    isActiveName={false}
+                  />
+                ))}
+              </CommandGroup>
+            )}
 
-          {isNoResults && <CommandEmpty>No coins found.</CommandEmpty>}
+            {isNoResults && <CommandEmpty>No coins found.</CommandEmpty>}
 
-          {isResultsVisible && (
-            <CommandGroup
-              heading={<p className='heading'>Search Results</p>}
-              className='group'
-            >
-              {searchResults.slice(0, SEARCH_LIMIT).map((coin) => (
-                <SearchItem
-                  key={coin.id}
-                  coin={coin}
-                  onSelect={handleSelect}
-                  isActiveName
-                />
-              ))}
-            </CommandGroup>
-          )}
-        </CommandList>
-      </CommandDialog>
+            {isResultsVisible && (
+              <CommandGroup
+                heading={<p className='heading'>Search Results</p>}
+                className='group'
+              >
+                {searchResults.slice(0, SEARCH_LIMIT).map((coin) => (
+                  <SearchItem
+                    key={coin.id}
+                    coin={coin}
+                    onSelect={handleSelect}
+                    isActiveName
+                  />
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </CommandDialog>
+      </Command>
     </div>
   );
 };

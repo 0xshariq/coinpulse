@@ -116,9 +116,9 @@ const LiveDataWrapper = ({ children, coinId, binanceSymbol, coin, coinOHLCData }
 
       <p className="px-1 text-xs text-purple-100/60" aria-live="polite">
         {isAvailable === false
-          ? `Live Binance data is unavailable for ${binanceSymbol.toUpperCase()}USDT; showing CoinGecko data.`
+          ? `Live Binance data is unavailable for ${binanceSymbol.toUpperCase()}/USDT; showing CoinGecko data.`
           : isConnected
-            ? `Live market data from Binance: ${binanceSymbol.toUpperCase()}USDT`
+            ? `Live market data from Binance: ${binanceSymbol.toUpperCase()}/USDT`
             : 'Reconnecting to Binance live market data…'}
       </p>
 

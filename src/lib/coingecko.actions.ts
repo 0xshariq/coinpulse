@@ -66,7 +66,66 @@ export async function fetcher<T>(
   throw new Error('Unexpected fetch error');
 }
 
+export async function getTrendingCoins(): Promise<TrendingCoin[]> {
+    const trendingList: { coins: TrendingCoin[] } = await fetcher<{ coins: TrendingCoin[] }>("/search/trending", undefined, 300);
+    return trendingList.coins;
+}
+
 export async function searchCoins(query: string): Promise<SearchCoin[]> {
-  const data = await fetcher<SearchCoin[]>('search', { query });
-  return data;
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) return [];
+
+  // 1. Search for matching coins
+  const searchResult = await fetcher<{
+    coins: {
+      id: string;
+      name: string;
+      symbol: string;
+      thumb: string;
+      large: string;
+      market_cap_rank: number;
+    }[];
+  }>("/search", {
+    query: trimmedQuery,
+  });
+
+  const coins = searchResult.coins.slice(0, 10);
+
+  if (coins.length === 0) return [];
+
+  // 2. Extract ids
+  const ids = coins.map((coin) => coin.id).join(",");
+
+  // 3. Fetch market data
+  const marketData = await fetcher<CoinMarketData[]>("/coins/markets", {
+    vs_currency: "usd",
+    ids,
+    sparkline: false,
+    price_change_percentage: "24h",
+  });
+
+  // 4. Convert market data into a lookup map
+  const marketMap = new Map(
+    marketData.map((coin) => [coin.id, coin])
+  );
+
+  // 5. Merge search + market data
+  return coins.map((coin) => {
+    const market = marketMap.get(coin.id);
+
+    return {
+      id: coin.id,
+      name: coin.name,
+      symbol: coin.symbol,
+      thumb: coin.thumb,
+      large: coin.large,
+      market_cap_rank: market?.market_cap_rank ?? coin.market_cap_rank,
+      data: {
+        price: market?.current_price ?? 0,
+        price_change_percentage_24h:
+          market?.price_change_percentage_24h ?? 0,
+      },
+    };
+  });
 }
