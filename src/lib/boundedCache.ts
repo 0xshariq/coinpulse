@@ -160,7 +160,7 @@ export class BoundedCache<T> {
 export function createBoundedCacheWithStorage<T>(
   maxSize: number,
   storageKey: string,
-  useSessionStorage: boolean = true
+  useSessionStorage: boolean = true,
 ): {
   cache: BoundedCache<T>;
   hydrateFromStorage: () => void;
@@ -180,11 +180,7 @@ export function createBoundedCacheWithStorage<T>(
       for (const [key, entry] of entries) {
         // Only restore non-expired entries
         if (entry.expiresAt > now) {
-          cache.set(
-            key,
-            entry.value,
-            Math.max(entry.expiresAt - now, 0)
-          );
+          cache.set(key, entry.value, Math.max(entry.expiresAt - now, 0));
         }
       }
     } catch (error) {
@@ -194,7 +190,7 @@ export function createBoundedCacheWithStorage<T>(
 
   const syncToStorage = () => {
     try {
-      const entries = Array.from((cache as any).map.entries());
+      const entries = Array.from((cache as Map<string, CacheEntry<T>>).entries());
       storage.setItem(storageKey, JSON.stringify(entries));
     } catch (error) {
       console.error(`Failed to sync cache to storage:`, error);

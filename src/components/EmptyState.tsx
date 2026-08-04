@@ -5,12 +5,7 @@ interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
-export function EmptyState({
-  icon,
-  title,
-  description,
-  action,
-}: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action }: EmptyStateProps): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       {icon && <div className="mb-4 text-4xl text-gray-400">{icon}</div>}
@@ -47,13 +42,11 @@ export function ErrorState({
 }: {
   message: string;
   onRetry?: () => void;
-}) {
+}): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-red-50 rounded-lg border border-red-200">
       <div className="mb-4 text-4xl">⚠️</div>
-      <h3 className="text-lg font-semibold text-red-900 mb-2">
-        Something went wrong
-      </h3>
+      <h3 className="text-lg font-semibold text-red-900 mb-2">{'Something went wrong'}</h3>
       <p className="text-sm text-red-700 max-w-md mb-6">{message}</p>
       {onRetry && (
         <button

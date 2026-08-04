@@ -6,14 +6,17 @@
  * of connections and centralizes reconnection logic.
  */
 
-const BINANCE_WS_BASE = "wss://stream.binance.com:9443/stream?streams=";
-const MAX_STREAMS_PER_CONNECTION = 100; // Binance limit is typically higher, but we use a safe default
+const BINANCE_WS_BASE = 'wss://stream.binance.com:9443/stream?streams=';
 const RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT_DELAY_MS = 30000;
 
+interface BinanceMessage {
+  [key: string]: unknown;
+}
+
 interface Subscription {
   stream: string;
-  callbacks: Set<(data: any) => void>;
+  callbacks: Set<(data: BinanceMessage) => void>;
 }
 
 class BinanceWebSocketManager {
@@ -27,7 +30,7 @@ class BinanceWebSocketManager {
    * Subscribe to a Binance stream (e.g., "btcusdt@ticker", "ethusd@kline_1s").
    * Returns an unsubscribe function.
    */
-  subscribe(stream: string, callback: (data: any) => void): () => void {
+  subscribe(stream: string, callback: (data: BinanceMessage) => void): () => void {
     if (!this.subscriptions.has(stream)) {
       this.subscriptions.set(stream, {
         stream,
@@ -62,8 +65,7 @@ class BinanceWebSocketManager {
   private connect(): void {
     if (
       this.ws &&
-      (this.ws.readyState === WebSocket.CONNECTING ||
-        this.ws.readyState === WebSocket.OPEN)
+      (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)
     ) {
       return; // Already connecting or connected
     }
@@ -72,11 +74,11 @@ class BinanceWebSocketManager {
     if (streams.length === 0) return;
 
     try {
-      const url = `${BINANCE_WS_BASE}${streams.join("/")}`;
+      const url = `${BINANCE_WS_BASE}${streams.join('/')}`;
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
-        console.log("[BinanceWSManager] Connected to WebSocket");
+        console.log('[BinanceWSManager] Connected to WebSocket');
         this.reconnectAttempt = 0;
         this.notifyListeners();
       };
@@ -92,38 +94,31 @@ class BinanceWebSocketManager {
               try {
                 callback(message.data);
               } catch (error) {
-                console.error(
-                  "[BinanceWSManager] Error in callback:",
-                  error
-                );
+                console.error('[BinanceWSManager] Error in callback:', error);
               }
             });
           }
         } catch (error) {
-          console.error("[BinanceWSManager] Error parsing message:", error);
+          console.error('[BinanceWSManager] Error parsing message:', error);
         }
       };
 
       this.ws.onerror = () => {
-        console.error("[BinanceWSManager] WebSocket error");
+        console.error('[BinanceWSManager] WebSocket error');
       };
 
       this.ws.onclose = () => {
-        console.log("[BinanceWSManager] WebSocket closed");
+        console.log('[BinanceWSManager] WebSocket closed');
         this.scheduleReconnect();
       };
     } catch (error) {
-      console.error("[BinanceWSManager] Error connecting:", error);
+      console.error('[BinanceWSManager] Error connecting:', error);
       this.scheduleReconnect();
     }
   }
 
   private updateSubscriptions(): void {
-    if (
-      !this.ws ||
-      this.ws.readyState !== WebSocket.OPEN ||
-      this.subscriptions.size === 0
-    ) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || this.subscriptions.size === 0) {
       return;
     }
 
@@ -131,13 +126,13 @@ class BinanceWebSocketManager {
     try {
       this.ws.send(
         JSON.stringify({
-          method: "SUBSCRIBE",
+          method: 'SUBSCRIBE',
           params: streams,
           id: Date.now(),
-        })
+        }),
       );
     } catch (error) {
-      console.error("[BinanceWSManager] Error updating subscriptions:", error);
+      console.error('[BinanceWSManager] Error updating subscriptions:', error);
     }
   }
 
@@ -146,13 +141,11 @@ class BinanceWebSocketManager {
 
     const delay = Math.min(
       RECONNECT_DELAY_MS * Math.pow(2, this.reconnectAttempt),
-      MAX_RECONNECT_DELAY_MS
+      MAX_RECONNECT_DELAY_MS,
     );
     this.reconnectAttempt++;
 
-    console.log(
-      `[BinanceWSManager] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempt})`
-    );
+    console.log(`[BinanceWSManager] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempt})`);
 
     this.reconnectTimer = setTimeout(() => {
       if (this.subscriptions.size > 0) {
@@ -166,7 +159,7 @@ class BinanceWebSocketManager {
       try {
         listener();
       } catch (error) {
-        console.error("[BinanceWSManager] Error in listener:", error);
+        console.error('[BinanceWSManager] Error in listener:', error);
       }
     });
   }

@@ -36,7 +36,6 @@ const CandlestickChart = ({
   const [isLoadingPeriod, setIsLoadingPeriod] = useState(false);
   const [isPending, startTransition] = useTransition();
   const cacheRef = useRef<BoundedCache<OHLCData[]> | null>(null);
-  const SESSION_CACHE_KEY = 'cp_ohlc_cache_v1';
   const prevCoinIdRef = useRef<string | undefined>(coinId);
 
   const getTtlForDays = (days: number | string) => {
@@ -156,7 +155,7 @@ const CandlestickChart = ({
   // Sync ohlcData when the data prop changes
   useEffect(() => {
     if (data && data.length > 0) {
-      setOhlcData(data);
+      startTransition(() => setOhlcData(data));
     }
   }, [data]);
 
@@ -188,8 +187,8 @@ const CandlestickChart = ({
       } else if (cached) {
         startTransition(() => setOhlcData(cached));
       }
-    } catch (e) {
-      // ignore
+    } catch {
+      // ignore cache initialization errors
     }
 
     // Cleanup on unmount
