@@ -15,9 +15,10 @@ import { Button } from './ui/button';
 import { searchCoins } from '@/lib/coingecko.actions';
 import { Search as SearchIcon, TrendingDown, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
-import { cn, formatPercentage } from '@/lib/utils';
+import { cn, formatPercentage, formatCurrency } from '@/lib/utils';
 import useSWR from 'swr';
 import { useDebounce, useKey } from 'react-use';
+import { useBinancePrice } from '@/hooks/useBinancePrice';
 
 const TRENDING_LIMIT = 8;
 const SEARCH_LIMIT = 10;
@@ -29,6 +30,12 @@ const SearchItem = ({ coin, onSelect, isActiveName }: SearchItemProps) => {
   const change = isSearchCoin
     ? (coin as SearchCoin).data?.price_change_percentage_24h ?? 0
     : (coin as TrendingCoin['item']).data.price_change_percentage_24h?.usd ?? 0;
+
+  // Get live price from Binance WebSocket
+  const { price: livePrice } = useBinancePrice(coin.symbol);
+
+  // Use live price or fallback to coin data price
+  const displayPrice = livePrice ?? (coin as any).data?.price ?? 0;
 
   return (
     <CommandItem
@@ -47,18 +54,26 @@ const SearchItem = ({ coin, onSelect, isActiveName }: SearchItemProps) => {
         </div>
       </div>
 
-      <div
-        className={cn('coin-change', {
-          'text-green-500': change > 0,
-          'text-red-500': change < 0,
-        })}
-      >
-        {change > 0 ? (
-          <TrendingUp size={14} className='text-green-500' />
-        ) : (
-          <TrendingDown size={14} className='text-red-500' />
-        )}
-        <span>{formatPercentage(Math.abs(change))}</span>
+      <div className='flex items-center gap-4 ml-auto'>
+        <div className='text-right min-w-fit'>
+          <p className='text-sm text-gray-400'>
+            {formatCurrency(displayPrice, 2, 'USD', true)}
+          </p>
+        </div>
+
+        <div
+          className={cn('coin-change', {
+            'text-green-500': change > 0,
+            'text-red-500': change < 0,
+          })}
+        >
+          {change > 0 ? (
+            <TrendingUp size={14} className='text-green-500' />
+          ) : (
+            <TrendingDown size={14} className='text-red-500' />
+          )}
+          <span>{formatPercentage(Math.abs(change))}</span>
+        </div>
       </div>
     </CommandItem>
   );
