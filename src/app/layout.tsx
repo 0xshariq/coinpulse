@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     'live charts',
     'market data',
   ],
-  authors: [{ name: 'CoinPulse' }],
+  authors: [{ name: 'Sharique Chaudhary' }],
   openGraph: {
     type: 'website',
     locale: 'en_US',
