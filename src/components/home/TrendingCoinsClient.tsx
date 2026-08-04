@@ -76,7 +76,7 @@ const TrendingCoinsClient = ({ coins }: { coins: TrendingCoin[] }) => {
       id: 'market-cap-rank',
       header: 'Market Cap Rank',
       cellClassName: 'market-cap-cell',
-      cell: (coin) => formatCurrency(coin.item.market_cap_rank),
+      cell: (coin) => `# ${coin.item.market_cap_rank}`,
     },
     {
       id: 'price',
