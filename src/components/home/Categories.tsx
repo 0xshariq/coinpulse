@@ -100,7 +100,7 @@ const Categories = async () => {
         id: 'market-cap',
         header: 'Market Cap',
         cellClassName: 'market-cap-cell',
-        cell: (category) => `# ${category.market_cap}`,
+        cell: (category) => `$${category.market_cap}`,
       },
       {
         id: 'volume-24h',
