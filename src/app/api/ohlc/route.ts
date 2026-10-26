@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetcher } from '@/lib/coingecko.actions';
+import { APIError } from '@/lib/apiClient';
 
 // Allowed values for the days parameter
 const ALLOWED_DAYS = ['1', '7', '30', '90', '180', '365', 'max'] as const;
@@ -69,9 +70,17 @@ export async function GET(request: Request) {
     };
 
     return NextResponse.json(data, { headers });
-  } catch (err: any) {
-    console.error('API /api/ohlc error:', err);
-    const status = err?.message?.includes('API Error: 400') ? 400 : 500;
-    return NextResponse.json({ error: err?.message || 'Internal error' }, { status });
+  } catch (error: unknown) {
+    console.error('API /api/ohlc error:', error);
+
+    if (error instanceof APIError) {
+      const status = error.status >= 400 && error.status < 500 ? error.status : 502;
+      return NextResponse.json(
+        { error: 'Unable to load market data', code: error.code },
+        { status },
+      );
+    }
+
+    return NextResponse.json({ error: 'Unable to load market data' }, { status: 500 });
   }
 }
