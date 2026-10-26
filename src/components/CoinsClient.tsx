@@ -17,10 +17,13 @@ const CoinsClient = ({ coins }: { coins: CoinMarketData[] }) => {
       header: 'Rank',
       cellClassName: 'rank-cell',
       cell: (coin) => (
-        <>
+        <Link
+          href={`/coins/${encodeURIComponent(coin.id)}`}
+          className="inline-flex rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+          aria-label={`View ${coin.name} details`}
+        >
           #{coin.market_cap_rank}
-          <Link href={`/coins/${coin.id}`} aria-label="View coin" />
-        </>
+        </Link>
       ),
     },
     {

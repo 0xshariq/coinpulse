@@ -9,6 +9,8 @@
 const BINANCE_WS_BASE = 'wss://stream.binance.com:9443/stream?streams=';
 const RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT_DELAY_MS = 30000;
+const RECONNECT_JITTER_MS = 1000;
+const STALE_CONNECTION_TIMEOUT_MS = 60_000;
 
 interface BinanceMessage {
   [key: string]: unknown;
@@ -24,6 +26,7 @@ class BinanceWebSocketManager {
   private subscriptions = new Map<string, Subscription>();
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private staleTimer: ReturnType<typeof setTimeout> | null = null;
   private listeners: Set<() => void> = new Set();
 
   /**
@@ -56,8 +59,20 @@ class BinanceWebSocketManager {
 
       // Remove subscription if no more callbacks
       if (subscription.callbacks.size === 0) {
+        if (this.ws?.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({ method: 'UNSUBSCRIBE', params: [stream], id: Date.now() }));
+        }
         this.subscriptions.delete(stream);
-        this.updateSubscriptions();
+        if (this.subscriptions.size === 0) {
+          if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+          }
+          this.ws?.close();
+          this.ws = null;
+        } else {
+          this.updateSubscriptions();
+        }
       }
     };
   }
@@ -75,22 +90,25 @@ class BinanceWebSocketManager {
 
     try {
       const url = `${BINANCE_WS_BASE}${streams.join('/')}`;
-      this.ws = new WebSocket(url);
+      const socket = new WebSocket(url);
+      this.ws = socket;
 
-      this.ws.onopen = () => {
+      socket.onopen = () => {
         console.log('[BinanceWSManager] Connected to WebSocket');
         this.reconnectAttempt = 0;
+        this.resetStaleTimer(socket);
         this.notifyListeners();
       };
 
-      this.ws.onmessage = (event: MessageEvent) => {
+      socket.onmessage = (event: MessageEvent) => {
         try {
           const message = JSON.parse(event.data);
           if (!message.stream || !message.data) return;
 
           const subscription = this.subscriptions.get(message.stream);
           if (subscription) {
-            subscription.callbacks.forEach((callback) => {
+            this.resetStaleTimer(socket);
+          subscription.callbacks.forEach((callback) => {
               try {
                 callback(message.data);
               } catch (error) {
@@ -103,17 +121,37 @@ class BinanceWebSocketManager {
         }
       };
 
-      this.ws.onerror = () => {
+      socket.onerror = () => {
         console.error('[BinanceWSManager] WebSocket error');
+        socket.close();
       };
 
-      this.ws.onclose = () => {
+      socket.onclose = () => {
+        if (this.ws !== socket) return;
+        this.ws = null;
+        this.clearStaleTimer();
         console.log('[BinanceWSManager] WebSocket closed');
         this.scheduleReconnect();
       };
     } catch (error) {
       console.error('[BinanceWSManager] Error connecting:', error);
       this.scheduleReconnect();
+    }
+  }
+
+  private resetStaleTimer(socket: WebSocket): void {
+    this.clearStaleTimer();
+    this.staleTimer = setTimeout(() => {
+      if (this.ws === socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    }, STALE_CONNECTION_TIMEOUT_MS);
+  }
+
+  private clearStaleTimer(): void {
+    if (this.staleTimer) {
+      clearTimeout(this.staleTimer);
+      this.staleTimer = null;
     }
   }
 
@@ -139,8 +177,12 @@ class BinanceWebSocketManager {
   private scheduleReconnect(): void {
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
 
-    const delay = Math.min(
+    const exponentialDelay = Math.min(
       RECONNECT_DELAY_MS * Math.pow(2, this.reconnectAttempt),
+      MAX_RECONNECT_DELAY_MS,
+    );
+    const delay = Math.min(
+      exponentialDelay + Math.floor(Math.random() * RECONNECT_JITTER_MS),
       MAX_RECONNECT_DELAY_MS,
     );
     this.reconnectAttempt++;
@@ -183,6 +225,7 @@ class BinanceWebSocketManager {
    * Disconnect the WebSocket
    */
   disconnect(): void {
+    this.clearStaleTimer();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;

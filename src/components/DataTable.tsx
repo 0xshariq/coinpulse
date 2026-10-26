@@ -8,6 +8,12 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
+const getColumnId = <T,>(column: DataTableColumn<T>): string | number => {
+  if (column.id !== undefined) return column.id;
+  if (column.key !== undefined) return column.key;
+  return column.header?.toString() ?? 'column';
+};
+
 const DataTable = <T,>({
   columns,
   data,
@@ -24,7 +30,7 @@ const DataTable = <T,>({
       <TableHeader className={headerClassName}>
         <TableRow className={cn('hover:bg-transparent!', headerRowClassName)}>
           {columns.map((column) => {
-            const colId = (column as any).id ?? (column as any).key;
+            const colId = getColumnId(column);
             return (
               <TableHead
                 key={colId}
@@ -50,7 +56,7 @@ const DataTable = <T,>({
             )}
           >
             {columns.map((column) => {
-              const colId = (column as any).id ?? (column as any).key;
+              const colId = getColumnId(column);
               return (
                 <TableCell
                   key={colId}
