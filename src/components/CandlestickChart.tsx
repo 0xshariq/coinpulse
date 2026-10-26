@@ -150,7 +150,7 @@ const CandlestickChart = ({
       chartRef.current = null;
       candleSeriesRef.current = null;
     };
-  }, [height, period]);
+  }, [height, period, ohlcData]);
 
   // Sync ohlcData when the data prop changes
   useEffect(() => {

@@ -10,6 +10,7 @@ const BINANCE_WS_BASE = 'wss://stream.binance.com:9443/stream?streams=';
 const RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT_DELAY_MS = 30000;
 const RECONNECT_JITTER_MS = 1000;
+const STALE_CONNECTION_TIMEOUT_MS = 60_000;
 
 interface BinanceMessage {
   [key: string]: unknown;
@@ -25,6 +26,7 @@ class BinanceWebSocketManager {
   private subscriptions = new Map<string, Subscription>();
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private staleTimer: ReturnType<typeof setTimeout> | null = null;
   private listeners: Set<() => void> = new Set();
 
   /**
@@ -57,6 +59,9 @@ class BinanceWebSocketManager {
 
       // Remove subscription if no more callbacks
       if (subscription.callbacks.size === 0) {
+        if (this.ws?.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({ method: 'UNSUBSCRIBE', params: [stream], id: Date.now() }));
+        }
         this.subscriptions.delete(stream);
         if (this.subscriptions.size === 0) {
           if (this.reconnectTimer) {
@@ -91,6 +96,7 @@ class BinanceWebSocketManager {
       socket.onopen = () => {
         console.log('[BinanceWSManager] Connected to WebSocket');
         this.reconnectAttempt = 0;
+        this.resetStaleTimer(socket);
         this.notifyListeners();
       };
 
@@ -101,7 +107,8 @@ class BinanceWebSocketManager {
 
           const subscription = this.subscriptions.get(message.stream);
           if (subscription) {
-            subscription.callbacks.forEach((callback) => {
+            this.resetStaleTimer(socket);
+          subscription.callbacks.forEach((callback) => {
               try {
                 callback(message.data);
               } catch (error) {
@@ -122,12 +129,29 @@ class BinanceWebSocketManager {
       socket.onclose = () => {
         if (this.ws !== socket) return;
         this.ws = null;
+        this.clearStaleTimer();
         console.log('[BinanceWSManager] WebSocket closed');
         this.scheduleReconnect();
       };
     } catch (error) {
       console.error('[BinanceWSManager] Error connecting:', error);
       this.scheduleReconnect();
+    }
+  }
+
+  private resetStaleTimer(socket: WebSocket): void {
+    this.clearStaleTimer();
+    this.staleTimer = setTimeout(() => {
+      if (this.ws === socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    }, STALE_CONNECTION_TIMEOUT_MS);
+  }
+
+  private clearStaleTimer(): void {
+    if (this.staleTimer) {
+      clearTimeout(this.staleTimer);
+      this.staleTimer = null;
     }
   }
 
@@ -201,6 +225,7 @@ class BinanceWebSocketManager {
    * Disconnect the WebSocket
    */
   disconnect(): void {
+    this.clearStaleTimer();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
