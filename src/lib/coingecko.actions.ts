@@ -1,6 +1,6 @@
 'use server';
 
-import { coingeckoClient } from './coingeckoClient';
+import { getCoingeckoClient } from './coingeckoClient';
 
 /**
  * Legacy fetcher function for backward compatibility
@@ -8,7 +8,7 @@ import { coingeckoClient } from './coingeckoClient';
  */
 export async function fetcher<T>(endpoint: string, params?: QueryParams): Promise<T> {
   try {
-    const result = await coingeckoClient.get<T>(endpoint, {
+    const result = await getCoingeckoClient().get<T>(endpoint, {
       params: (params as Record<string, string | number | boolean>) || {},
     });
     return result;

@@ -1,26 +1,30 @@
 import { APIClient } from './apiClient';
 
-const BASE_URL = process.env.COINGECKO_BASE_URL;
-const API_KEY = process.env.COINGECKO_API_KEY;
-
-if (!BASE_URL) {
-  throw new Error('COINGECKO_BASE_URL environment variable is not set');
-}
-
-if (!API_KEY) {
-  throw new Error('COINGECKO_API_KEY environment variable is not set');
-}
-
 /**
- * Shared CoinGecko API client instance
+ * Creates the shared CoinGecko API client only when a server request needs it.
+ * Keeping environment validation inside the factory prevents unrelated routes
+ * from failing during static generation or build-time module evaluation.
  */
-export const coingeckoClient = new APIClient({
-  baseURL: BASE_URL,
-  apiKey: API_KEY,
-  timeout: 15000, // 15 seconds for CoinGecko
-  maxRetries: 3,
-  retryDelay: 1000,
-});
+export function getCoingeckoClient(): APIClient {
+  const baseURL = process.env.COINGECKO_BASE_URL;
+  const apiKey = process.env.COINGECKO_API_KEY;
+
+  if (!baseURL) {
+    throw new Error('COINGECKO_BASE_URL environment variable is not set');
+  }
+
+  if (!apiKey) {
+    throw new Error('COINGECKO_API_KEY environment variable is not set');
+  }
+
+  return new APIClient({
+    baseURL,
+    apiKey,
+    timeout: 15000,
+    maxRetries: 3,
+    retryDelay: 1000,
+  });
+}
 
 /**
  * Typed endpoints for CoinGecko API
