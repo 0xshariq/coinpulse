@@ -9,6 +9,7 @@
 const BINANCE_WS_BASE = 'wss://stream.binance.com:9443/stream?streams=';
 const RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT_DELAY_MS = 30000;
+const RECONNECT_JITTER_MS = 1000;
 
 interface BinanceMessage {
   [key: string]: unknown;
@@ -57,7 +58,16 @@ class BinanceWebSocketManager {
       // Remove subscription if no more callbacks
       if (subscription.callbacks.size === 0) {
         this.subscriptions.delete(stream);
-        this.updateSubscriptions();
+        if (this.subscriptions.size === 0) {
+          if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+          }
+          this.ws?.close();
+          this.ws = null;
+        } else {
+          this.updateSubscriptions();
+        }
       }
     };
   }
@@ -75,15 +85,16 @@ class BinanceWebSocketManager {
 
     try {
       const url = `${BINANCE_WS_BASE}${streams.join('/')}`;
-      this.ws = new WebSocket(url);
+      const socket = new WebSocket(url);
+      this.ws = socket;
 
-      this.ws.onopen = () => {
+      socket.onopen = () => {
         console.log('[BinanceWSManager] Connected to WebSocket');
         this.reconnectAttempt = 0;
         this.notifyListeners();
       };
 
-      this.ws.onmessage = (event: MessageEvent) => {
+      socket.onmessage = (event: MessageEvent) => {
         try {
           const message = JSON.parse(event.data);
           if (!message.stream || !message.data) return;
@@ -103,11 +114,14 @@ class BinanceWebSocketManager {
         }
       };
 
-      this.ws.onerror = () => {
+      socket.onerror = () => {
         console.error('[BinanceWSManager] WebSocket error');
+        socket.close();
       };
 
-      this.ws.onclose = () => {
+      socket.onclose = () => {
+        if (this.ws !== socket) return;
+        this.ws = null;
         console.log('[BinanceWSManager] WebSocket closed');
         this.scheduleReconnect();
       };
@@ -139,8 +153,12 @@ class BinanceWebSocketManager {
   private scheduleReconnect(): void {
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
 
-    const delay = Math.min(
+    const exponentialDelay = Math.min(
       RECONNECT_DELAY_MS * Math.pow(2, this.reconnectAttempt),
+      MAX_RECONNECT_DELAY_MS,
+    );
+    const delay = Math.min(
+      exponentialDelay + Math.floor(Math.random() * RECONNECT_JITTER_MS),
       MAX_RECONNECT_DELAY_MS,
     );
     this.reconnectAttempt++;

@@ -5,7 +5,16 @@ import { ArrowUpRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import LiveDataWrapper from '@/components/LiveDataWrapper';
 import Converter from '@/components/Converter';
-import { Metadata } from 'next';
+const isSafeExternalUrl = (value: string | undefined): value is string => {
+  if (!value) return false;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
 
 // export async function generateMetadata({ params }: NextPageProps): Promise<Metadata> {
 //   try {
@@ -162,12 +171,12 @@ const Page = async ({ params }: NextPageProps) => {
 
           <ul className="details-grid">
             {coinDetails.map(({ label, value, link, linkText }, index) => (
-              <li key={index} className='overflow-auto'>
+              <li key={index} className="overflow-auto">
                 <p className={label}>{label}</p>
 
-                {link ? (
+                {isSafeExternalUrl(link) ? (
                   <div className="link">
-                    <Link href={link} target="_blank">
+                    <Link href={link} target="_blank" rel="noopener noreferrer">
                       {linkText || label}
                     </Link>
                     <ArrowUpRight size={16} />

@@ -220,7 +220,7 @@ const CandlestickChart = ({
       chartRef.current?.timeScale().fitContent();
       prevOhlcDataLength.current = ohlcData.length;
     }
-  }, [ohlcData, period, liveOhlcv, mode]);
+  }, [ohlcData, liveOhlcv, mode]);
 
   return (
     <div id="candlestick-chart">
