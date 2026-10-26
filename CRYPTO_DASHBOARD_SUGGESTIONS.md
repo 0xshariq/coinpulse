@@ -11,11 +11,13 @@ A private timeline where a user records why they bought, sold, or watched an ass
 Most dashboards optimize for more data, but they do not help users learn from their own decisions. A journal converts a passive dashboard into a feedback loop. It also creates a durable reason to return without encouraging impulsive trading.
 
 ### How to implement
-1. Add authentication and a database table such as `journal_entries` with `user_id`, `coin_id`, `action`, `thesis`, `target_price`, `risk_note`, `created_at`, and a JSON snapshot of relevant market metrics.
+1. Add authentication and a database table such as `journal_entries` with `user_id`, `coin_id`, `action`, `thesis`, `target_price`, `risk_note`, `decision_at`, `created_at`, and a JSON snapshot of relevant market metrics.
 2. Add a "Record decision" action to the coin detail page.
-3. On submission, fetch or reuse the current market data on the server and store the snapshot; never trust client-provided prices for the historical context.
+3. Treat `decision_at` as the time the user says the decision occurred, and use market data for that timestamp when available. If the product only captures data during form submission, name the field `recorded_context_at` and clearly label the snapshot as record-time context rather than decision-time history.
 4. Add a journal page with filters for coin, action, date, and outcome.
 5. Later, calculate simple retrospective metrics such as thesis accuracy, average holding time, and whether the user followed their stated risk limit.
+
+Every read and write must be authorized against the authenticated session and scoped by `user_id`; encryption at rest or application-level encryption for sensitive quantities and cost basis is an additional defense, not a replacement for per-user authorization.
 
 ### Important safeguards
 Keep entries private by default. Present analytics as reflection and education, not financial advice. Avoid ranking users or creating social pressure around returns.
@@ -30,10 +32,10 @@ A normal chart shows what happened but not the market context. An explainable re
 
 ### How to implement
 1. Collect OHLCV data at a fixed interval and normalize it on the server.
-2. Derive deterministic features: rolling returns, realized volatility, volume z-score, drawdown, and correlation to BTC.
-3. Use a small rules-based classifier first. For example, high volatility plus positive trend slope becomes `volatile_uptrend`; low volatility plus low trend slope becomes `range`.
-4. Render regime bands behind the candlestick chart and provide a text explanation containing the exact contributing metrics.
-5. Store computed regimes so historical pages do not recalculate expensive windows on every request.
+2. Derive deterministic features from explicitly defined windows: rolling return, linear-regression trend slope, realized volatility, volume z-score, drawdown, correlation to BTC, and a liquidity measure such as median dollar volume (`close * volume`). Record the interval, window sizes, and missing-data behavior.
+3. Use a small rules-based classifier with versioned, reproducible thresholds. For example, define `volatile_uptrend` as annualized realized volatility >= 80% and normalized trend slope >= 0.5% per candle; define `range` as absolute normalized trend slope < 0.1% per candle and annualized realized volatility < 50%; define `liquidity_stressed` only when median dollar volume is below a documented asset-relative floor (for example, below the 20th percentile of that asset's trailing 90-day history). Every label must be selected from these explicitly listed inputs and thresholds; remove any label that cannot be computed from the documented features.
+4. Render regime bands behind the candlestick chart and provide a text explanation containing the exact contributing metrics and thresholds.
+5. Store computed regimes and the rule-set version so historical pages do not recalculate expensive windows on every request and old labels remain reproducible.
 
 ### Important safeguards
 Do not present regimes as predictions. Show the data window, thresholds, and confidence limitations. Version the rule set so old labels remain reproducible when thresholds change.

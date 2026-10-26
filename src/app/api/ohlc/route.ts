@@ -74,7 +74,16 @@ export async function GET(request: Request) {
     console.error('API /api/ohlc error:', error);
 
     if (error instanceof APIError) {
-      const status = error.status >= 400 && error.status < 500 ? error.status : 502;
+      // Authentication and authorization failures from CoinGecko are provider failures,
+      // not client-correctable errors for this endpoint.
+      const status =
+        error.status === 401
+          ? 502
+          : error.status === 403
+            ? 503
+            : error.status >= 400 && error.status < 500
+              ? error.status
+              : 502;
       return NextResponse.json(
         { error: 'Unable to load market data', code: error.code },
         { status },
