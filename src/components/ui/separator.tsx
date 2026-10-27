@@ -11,7 +11,7 @@ function Separator({ className, orientation = 'horizontal', ...props }: Separato
     <SeparatorPrimitive
       data-slot="separator"
       orientation={orientation}
-      className={(state: any) =>
+      className={(state) =>
         cn(
           base,
           state.orientation === 'horizontal' ? 'h-px w-full' : 'w-px self-stretch',

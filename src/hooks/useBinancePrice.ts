@@ -9,6 +9,10 @@ interface PriceData {
   loading: boolean;
 }
 
+interface BinanceMessage {
+  [key: string]: unknown;
+}
+
 export const useBinancePrice = (symbol: string) => {
   const [priceData, setPriceData] = useState<PriceData>({
     price: null,
@@ -16,21 +20,15 @@ export const useBinancePrice = (symbol: string) => {
   });
 
   useEffect(() => {
-    if (!symbol) {
-      setPriceData({ price: null, loading: false });
-      return;
-    }
+    if (!symbol) return;
 
     const pair = getBinanceUsdtPair(symbol);
-    if (!pair) {
-      setPriceData({ price: null, loading: false });
-      return;
-    }
+    if (!pair) return;
 
     const stream = `${pair}@ticker`;
 
-    const handleMessage = (data: any) => {
-      if (data.c) {
+    const handleMessage = (data: BinanceMessage) => {
+      if (typeof data.c === 'string' && data.c) {
         const price = parseFloat(data.c);
         setPriceData({ price, loading: false });
       }
@@ -38,7 +36,9 @@ export const useBinancePrice = (symbol: string) => {
 
     // Subscribe through the shared manager
     const unsubscribe = binanceWSManager.subscribe(stream, handleMessage);
-    setPriceData((prev) => ({ ...prev, loading: false }));
+    queueMicrotask(() => {
+      setPriceData((prev) => ({ ...prev, loading: false }));
+    });
 
     return unsubscribe;
   }, [symbol]);

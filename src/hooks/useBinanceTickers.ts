@@ -14,13 +14,12 @@ export const useBinanceTickers = (symbols: string[]) => {
   const socketRef = useRef<WebSocket | null>(null);
   const pendingTickersRef = useRef<Map<string, BinanceLiveTicker>>(new Map());
 
-  const symbolsKey = symbols.join('|');
   const pairs = useMemo(
     () =>
       Array.from(
         new Set(symbols.map(getBinanceUsdtPair).filter((pair): pair is string => Boolean(pair))),
       ),
-    [symbolsKey],
+    [symbols],
   );
 
   useEffect(() => {
@@ -75,7 +74,9 @@ export const useBinanceTickers = (symbols: string[]) => {
     };
 
     pendingTickersRef.current = new Map();
-    setTickers(new Map());
+    queueMicrotask(() => {
+      if (!disposed) setTickers(new Map());
+    });
     connect();
 
     return () => {

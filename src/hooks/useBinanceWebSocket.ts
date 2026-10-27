@@ -138,17 +138,22 @@ export const useBinanceWebSocket = ({
       socket.onerror = () => socket.close();
     };
 
-    setPrice(null);
-    setTrades([]);
-    setOhlcv(null);
-    setBookTicker(null);
-    setIsConnected(false);
-    setIsAvailable(null);
-    setLastMessageAt(null);
+    queueMicrotask(() => {
+      if (disposed) return;
+      setPrice(null);
+      setTrades([]);
+      setOhlcv(null);
+      setBookTicker(null);
+      setIsConnected(false);
+      setIsAvailable(null);
+      setLastMessageAt(null);
+    });
     clearReconnectTimer();
 
     if (!pair) {
-      setIsAvailable(false);
+      queueMicrotask(() => {
+        if (!disposed) setIsAvailable(false);
+      });
       return;
     }
 
