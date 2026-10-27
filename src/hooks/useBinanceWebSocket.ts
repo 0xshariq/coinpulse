@@ -25,6 +25,7 @@ export const useBinanceWebSocket = ({
   const [bookTicker, setBookTicker] = useState<BinanceBookTicker | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [lastMessageAt, setLastMessageAt] = useState<number | null>(null);
 
   const pair = useMemo(() => getBinanceUsdtPair(symbol), [symbol]);
 
@@ -66,6 +67,7 @@ export const useBinanceWebSocket = ({
         }
         const data = message.data;
         if (!data) return;
+        setLastMessageAt(Date.now());
 
         if (!('e' in data) && 'b' in data && 'a' in data) {
           setBookTicker({
@@ -142,6 +144,7 @@ export const useBinanceWebSocket = ({
     setBookTicker(null);
     setIsConnected(false);
     setIsAvailable(null);
+    setLastMessageAt(null);
     clearReconnectTimer();
 
     if (!pair) {
@@ -164,5 +167,5 @@ export const useBinanceWebSocket = ({
     };
   }, [pair, liveInterval]);
 
-  return { price, trades, ohlcv, bookTicker, isConnected, isAvailable };
+  return { price, trades, ohlcv, bookTicker, isConnected, isAvailable, lastMessageAt };
 };

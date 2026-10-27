@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description:
       'Browse the complete list of cryptocurrencies with live prices, 24h changes, market cap, and volume on CoinPulse.',
     type: 'website',
-    url: 'https://coinpulse.vercel.app/coins',
+    url: 'https://coinpulse-ten-psi.vercel.app/coins',
   },
   twitter: {
     card: 'summary_large_image',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
       'Browse the complete list of cryptocurrencies with live prices, 24h changes, market cap, and volume on CoinPulse.',
   },
   alternates: {
-    canonical: 'https://coinpulse.vercel.app/coins',
+    canonical: 'https://coinpulse-ten-psi.vercel.app/coins',
   },
 };
 

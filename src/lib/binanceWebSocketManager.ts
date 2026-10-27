@@ -108,7 +108,7 @@ class BinanceWebSocketManager {
           const subscription = this.subscriptions.get(message.stream);
           if (subscription) {
             this.resetStaleTimer(socket);
-          subscription.callbacks.forEach((callback) => {
+            subscription.callbacks.forEach((callback) => {
               try {
                 callback(message.data);
               } catch (error) {

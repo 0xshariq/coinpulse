@@ -34,7 +34,7 @@ const SearchItem = ({ coin, onSelect, isActiveName }: SearchItemProps) => {
   const { price: livePrice } = useBinancePrice(coin.symbol);
 
   // Use live price or fallback to coin data price
-  const displayPrice = livePrice ?? (coin as any).data?.price ?? 0;
+  const displayPrice = livePrice ?? ('data' in coin ? coin.data?.price : undefined) ?? 0;
 
   return (
     <CommandItem value={coin.id} onSelect={() => onSelect(coin.id)} className="search-item">

@@ -14,8 +14,7 @@ export default function Error({
     console.error('[coins/[id]/error]', error);
   }, [error]);
 
-  const isNotFound =
-    error.message?.includes('not found') || error.message?.includes('404');
+  const isNotFound = error.message?.includes('not found') || error.message?.includes('404');
 
   return (
     <main id="coin-detail-page">

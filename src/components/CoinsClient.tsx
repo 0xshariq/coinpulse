@@ -73,8 +73,9 @@ const CoinsClient = ({ coins }: { coins: CoinMarketData[] }) => {
     },
     {
       id: 'market-cap',
-      header: 'Market Cap',
-      cellClassName: 'market-cap-cell',
+      header: <span className="hidden sm:inline">Market Cap</span>,
+      headClassName: 'hidden sm:table-cell',
+      cellClassName: 'market-cap-cell hidden sm:table-cell',
       cell: (coin) => formatCurrency(coin.market_cap),
     },
   ];

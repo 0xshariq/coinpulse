@@ -6,10 +6,7 @@ export default function Loading() {
 
         <div className="space-y-4">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-16 bg-dark-300 rounded-lg animate-pulse"
-            />
+            <div key={i} className="h-16 bg-dark-300 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>

@@ -22,7 +22,7 @@ export function formatCurrency(
 ) {
   // Validate input is a finite number
   if (!isFiniteNumber(value)) {
-    return showSymbol !== false ? '$0.00' : '0.00';
+    return '—';
   }
 
   // Use a fixed locale to avoid server/client locale mismatches during SSR hydration.
@@ -130,7 +130,10 @@ export function convertOHLCData(data: OHLCData[]) {
         close,
       };
     })
-    .filter((item): item is { time: Time; open: number; high: number; low: number; close: number } => item !== null)
+    .filter(
+      (item): item is { time: Time; open: number; high: number; low: number; close: number } =>
+        item !== null,
+    )
     .filter((item, index, arr) => index === 0 || item.time !== (arr[index - 1]?.time ?? -1));
 }
 

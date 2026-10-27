@@ -264,6 +264,7 @@ interface UseBinanceWebSocketReturn {
   bookTicker: BinanceBookTicker | null;
   isConnected: boolean;
   isAvailable: boolean | null;
+  lastMessageAt: number | null;
 }
 
 interface BinanceTickerMessage {
@@ -356,6 +357,7 @@ interface DataTableProps<T> {
   headerCellClassName?: string;
   bodyRowClassName?: string;
   bodyCellClassName?: string;
+  emptyMessage?: React.ReactNode;
 }
 
 type ButtonSize = 'default' | 'sm' | 'lg' | 'icon' | 'icon-sm' | 'icon-lg';

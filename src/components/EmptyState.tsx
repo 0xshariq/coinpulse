@@ -38,13 +38,7 @@ export function NoCoinsFound() {
   );
 }
 
-export function ErrorState({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry?: () => void;
-}) {
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-red-50 rounded-lg border border-red-200">
       <div className="mb-4 text-4xl">⚠️</div>

@@ -16,10 +16,11 @@ const LiveDataWrapper = ({
   coinOHLCData,
 }: LiveDataProps) => {
   const [liveInterval, setLiveInterval] = useState<'1s' | '1m'>('1s');
-  const { trades, ohlcv, price, bookTicker, isConnected, isAvailable } = useBinanceWebSocket({
-    symbol: binanceSymbol,
-    liveInterval,
-  });
+  const { trades, ohlcv, price, bookTicker, isConnected, isAvailable, lastMessageAt } =
+    useBinanceWebSocket({
+      symbol: binanceSymbol,
+      liveInterval,
+    });
 
   const tradeColumns: (DataTableColumn<Trade> &
     ({ id: string | number } | { key: string | number }))[] = [
@@ -47,6 +48,7 @@ const LiveDataWrapper = ({
       cellClassName: 'type-cell',
       cell: (trade) => (
         <span className={trade.type === 'b' ? 'text-green-500' : 'text-red-500'}>
+          <span className="sr-only">Trade side: </span>
           {trade.type === 'b' ? 'Buy' : 'Sell'}
         </span>
       ),
@@ -125,13 +127,19 @@ const LiveDataWrapper = ({
       />
       <Separator className="divider" />
 
-      <p className="px-1 text-xs text-purple-100/60" aria-live="polite">
-        {isAvailable === false
-          ? `Live Binance data is unavailable for ${binanceSymbol.toUpperCase()}/USDT; showing CoinGecko data.`
-          : isConnected
-            ? `Live market data from Binance: ${binanceSymbol.toUpperCase()}/USDT`
-            : 'Reconnecting to Binance live market data…'}
-      </p>
+      <div
+        className="px-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-purple-100/60"
+        aria-live="polite"
+      >
+        <span className={isConnected ? 'text-green-400' : 'text-yellow-400'}>
+          {isAvailable === false ? 'Unavailable' : isConnected ? 'Live' : 'Stale / reconnecting'}
+        </span>
+        <span>Source: Binance</span>
+        <span>
+          {lastMessageAt ? `Last update: ${timeAgo(lastMessageAt)}` : 'Waiting for update'}
+        </span>
+        <span>{isConnected ? 'WebSocket connected' : 'WebSocket disconnected'}</span>
+      </div>
 
       <div className="trend">
         <CandlestickChart

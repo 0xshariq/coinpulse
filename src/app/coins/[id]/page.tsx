@@ -1,4 +1,5 @@
 import { fetcher } from '@/lib/coingecko.actions';
+import type { Metadata } from 'next';
 import { getBinanceTicker } from '@/lib/binance.actions';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
@@ -16,58 +17,39 @@ const isSafeExternalUrl = (value: string | undefined): value is string => {
   }
 };
 
-// export async function generateMetadata({ params }: NextPageProps): Promise<Metadata> {
-//   try {
-//     const { id } = await params;
-//     const coinData = await fetcher<CoinDetailsData>(`/coins/${id}`, {
-//       dex_pair_format: 'contract_address',
-//     }).catch(() => null);
+export async function generateMetadata({ params }: NextPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const coinData = await fetcher<CoinDetailsData>(`/coins/${id}`, {
+    dex_pair_format: 'contract_address',
+  }).catch(() => null);
 
-//     if (!coinData) {
-//       return {
-//         title: 'Coin Not Found | CoinPulse',
-//         description: 'The coin you are looking for does not exist.',
-//       };
-//     }
+  if (!coinData) {
+    return {
+      title: 'Coin Not Found',
+      description: 'The coin you are looking for does not exist on CoinPulse.',
+      alternates: { canonical: `/coins/${encodeURIComponent(id)}` },
+    };
+  }
 
-//     const title = `${coinData.name} (${coinData.symbol.toUpperCase()}) | CoinPulse`;
-//     const description = coinData.description?.en
-//       ? coinData.description.en.replace(/<[^>]*>/g, '').slice(0, 160)
-//       : `Get live price, charts, and market data for ${coinData.name}.`;
+  const title = `${coinData.name} (${coinData.symbol.toUpperCase()})`;
+  const description = coinData.description?.en
+    ? coinData.description.en.replace(/<[^>]*>/g, '').slice(0, 160)
+    : `Get live price, charts, and market data for ${coinData.name}.`;
+  const image = coinData.image?.large || coinData.image?.small || '/og-image.png';
 
-//     return {
-//       title,
-//       description,
-//       openGraph: {
-//         title,
-//         description,
-//         type: 'website',
-//         images: [
-//           {
-//             url: coinData.image?.large || coinData.image?.small || '/og-image.png',
-//             width: 1200,
-//             height: 630,
-//             alt: coinData.name,
-//           },
-//         ],
-//       },
-//       twitter: {
-//         card: 'summary_large_image',
-//         title,
-//         description,
-//         images: [coinData.image?.large || coinData.image?.small || '/og-image.png'],
-//       },
-//       alternates: {
-//         canonical: `https://coinpulse.vercel.app/coins/${id}`,
-//       },
-//     };
-//   } catch {
-//     return {
-//       title: 'Coin Details | CoinPulse',
-//       description: 'View detailed information about cryptocurrencies on CoinPulse.',
-//     };
-//   }
-// }
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images: [{ url: image, alt: coinData.name }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: [image] },
+    alternates: { canonical: `/coins/${encodeURIComponent(id)}` },
+  };
+}
 
 const Page = async ({ params }: NextPageProps) => {
   const { id } = await params;
