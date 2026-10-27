@@ -3,9 +3,7 @@ import { fetcher } from '@/lib/coingecko.actions';
 import { CoinOverviewFallback } from './fallback';
 import CoinOverviewClient from '@/components/home/CoinOverviewClient';
 
-const CoinOverview = async () => {
-  const ids = ['bitcoin', 'ethereum', 'solana'];
-
+const loadCoinOverview = async (ids: string[]) => {
   try {
     // Fetch coin details in parallel
     const coinPromises = ids.map((id) =>
@@ -31,11 +29,18 @@ const CoinOverview = async () => {
       coinsData[id] = { coin: coins[idx], ohlc: ohlcResults[idx] };
     });
 
-    return <CoinOverviewClient coinsData={coinsData} />;
+    return coinsData;
   } catch (error) {
     console.error('Error fetching coin overview:', error);
-    return <CoinOverviewFallback />;
+    return null;
   }
+};
+
+const CoinOverview = async () => {
+  const ids = ['bitcoin', 'ethereum', 'solana'];
+  const coinsData = await loadCoinOverview(ids);
+
+  return coinsData ? <CoinOverviewClient coinsData={coinsData} /> : <CoinOverviewFallback />;
 };
 
 export default CoinOverview;

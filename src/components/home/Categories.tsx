@@ -5,13 +5,21 @@ import { cn, formatCurrency, formatPercentage } from '@/lib/utils';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { CategoriesFallback } from './fallback';
 
-const Categories = async () => {
+const loadCategories = async (): Promise<Category[] | null> => {
   try {
     const categories = await fetcher<Category[]>('/coins/categories');
+    return Array.isArray(categories) && categories.length > 0 ? categories : null;
+  } catch (error) {
+    console.error('[Categories] Error fetching categories:', error);
+    return null;
+  }
+};
 
-    if (!Array.isArray(categories) || categories.length === 0) {
-      return <CategoriesFallback />;
-    }
+const Categories = async () => {
+  const categories = await loadCategories();
+  if (!categories) return <CategoriesFallback />;
+
+  try {
 
     // Filter to only valid categories, logging any malformed ones
     const validCategories = categories.filter((category) => {
@@ -123,7 +131,7 @@ const Categories = async () => {
       </div>
     );
   } catch (error) {
-    console.error('[Categories] Error fetching categories:', error);
+    console.error('[Categories] Error preparing categories:', error);
     return <CategoriesFallback />;
   }
 };

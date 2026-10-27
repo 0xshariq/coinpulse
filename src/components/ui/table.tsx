@@ -4,7 +4,9 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-function Table({ className, wrapperClassName, ...props }: any) {
+type TableProps = React.ComponentProps<'table'> & { wrapperClassName?: string };
+
+function Table({ className, wrapperClassName, ...props }: TableProps) {
   return (
     <div
       data-slot="table-container"

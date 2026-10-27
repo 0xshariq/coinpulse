@@ -196,7 +196,7 @@ const CandlestickChart = ({
       // Note: We keep the cache alive for potential reuse in the same session
       // but could call cacheRef.current?.destroy() if needed
     };
-  }, []);
+  }, [coinId, data, period]);
 
   useEffect(() => {
     if (!candleSeriesRef.current) return;
